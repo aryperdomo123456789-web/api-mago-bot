@@ -12,6 +12,7 @@ BRAND_LOGO_PATH = ASSETS_DIR / "mago-logo-192.png"
 FAVICON_PATH = ASSETS_DIR / "mago-favicon.png"
 SHARE_CARD_PATH = ASSETS_DIR / "share-card-ui-20260805.png"
 HERO_IMAGE_PATH = ASSETS_DIR / "mago-hero-20260826.png"
+CTA_IMAGE_PATH = ASSETS_DIR / "mago-cta-human-20260826.png"
 
 PUBLIC_APP_JS = r'''(() => {
   const button = document.querySelector('[data-nav-toggle]');
@@ -147,6 +148,11 @@ def favicon():
 @router.get("/mago-hero.png")
 def mago_hero():
     return Response(HERO_IMAGE_PATH.read_bytes(), media_type="image/png")
+
+
+@router.get("/mago-cta-human.png")
+def mago_cta_human():
+    return Response(CTA_IMAGE_PATH.read_bytes(), media_type="image/png")
 
 
 @router.get("/", response_class=HTMLResponse)

@@ -211,6 +211,13 @@
     .cta::before { content: ""; position: absolute; width: 360px; height: 360px; top: -220px; right: -90px; border: 1px solid rgba(217,255,98,.26); border-radius: 50%; box-shadow: 0 0 0 30px rgba(217,255,98,.045), 0 0 0 60px rgba(217,255,98,.025); }
     .cta h2 { position: relative; max-width: 650px; margin-bottom: 16px; }
     .cta p { position: relative; max-width: 620px; margin-bottom: 25px; color: #c4d8c8; line-height: 1.7; }
+    .cta-grid { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(280px, .95fr); align-items: center; gap: 30px; }
+    .cta-copy { position: relative; z-index: 2; }
+    .cta-human { position: relative; min-height: 300px; overflow: hidden; border: 1px solid rgba(217,255,98,.25); border-radius: 24px; background: #0b2827; box-shadow: 0 18px 48px rgba(0,0,0,.22); }
+    .cta-human::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(10,35,35,.2), transparent 45%, rgba(10,35,35,.07)); }
+    .cta-human img { width: 100%; height: 100%; min-height: 300px; object-fit: cover; object-position: center; }
+    .cta-human-badge { position: absolute; right: 16px; bottom: 16px; z-index: 2; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(217,255,98,.35); border-radius: 999px; padding: 9px 12px; color: var(--paper); background: rgba(6,22,23,.8); font-size: .75rem; font-weight: 700; backdrop-filter: blur(10px); }
+    .cta-human-badge i { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 5px rgba(217,255,98,.12); }
     .footer { padding: 58px 0 32px; color: var(--muted); }
     .footer-top { display: flex; align-items: start; justify-content: space-between; gap: 30px; padding-bottom: 45px; }
     .footer-brand { max-width: 300px; }
@@ -252,6 +259,8 @@
       .section-head { align-items: start; flex-direction: column; gap: 10px; }
       .showcase-copy { padding: 0 0 10px; }
       .cta { margin-top: 55px; }
+      .cta-grid { grid-template-columns: 1fr; gap: 24px; }
+      .cta-human, .cta-human img { min-height: 260px; }
       .footer-top { flex-direction: column; }
       .footer-bottom { flex-direction: column; }
       .footer-bottom span:last-child { text-align: left; }
@@ -431,7 +440,12 @@
           <details class="faq"><summary>Preciso mudar minha integração ao trocar de provider?</summary><p>Não no contrato Mago: projeto, API key, quotas, eventos e auditoria permanecem no control plane. As capacidades e limites específicos do provider continuam explícitos.</p></details>
           <details class="faq"><summary>O que acontece quando uma mensagem falha?</summary><p>O Mago classifica o erro, respeita idempotência, aplica retry quando seguro e registra o evento para diagnóstico. O cliente não recebe um “deu ruim” sem contexto.</p></details>
         </div>
-        <div class="cta"><span class="eyebrow">Pronto para sair do improviso?</span><h2>Coloque uma operação de verdade por trás das suas conversas.</h2><p>Comece pelo contrato Mago, conecte o provider certo para sua fase e tenha uma base preparada para crescer.</p><a class="button button-primary" href="#planos">Conhecer os planos <span aria-hidden="true">↗</span></a></div>
+        <div class="cta">
+          <div class="cta-grid">
+            <div class="cta-copy"><span class="eyebrow">Pronto para sair do improviso?</span><h2>Coloque uma operação de verdade por trás das suas conversas.</h2><p>Comece pelo contrato Mago, conecte o provider certo para sua fase e tenha uma base preparada para crescer.</p><a class="button button-primary" href="#planos">Conhecer os planos <span aria-hidden="true">↗</span></a></div>
+            <div class="cta-human"><img src="/mago-cta-human.png" alt="Profissional de tecnologia usando o celular em uma operação de mensageria" width="2176" height="1632" loading="lazy" decoding="async" /><span class="cta-human-badge"><i></i> Operação pronta para crescer</span></div>
+          </div>
+        </div>
       </div>
     </section>
   </main>

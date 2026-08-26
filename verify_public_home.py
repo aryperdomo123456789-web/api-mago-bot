@@ -9,8 +9,10 @@ assert 'def mago_hero' in route
 assert 'mago-hero-20260826.png' in route
 assert 'mago-logo-192.png' in route
 assert 'mago-favicon.png' in route
+assert 'mago-cta-human-20260826.png' in route
 assert 'src="/mago-hero.png"' in template
 assert 'src="/brand-logo-ui.png"' in template
+assert 'src="/mago-cta-human.png"' in template
 assert 'rel="icon"' in template
 assert 'data-nav-toggle' in template
 assert 'aria-expanded="false"' in template
