@@ -38,6 +38,9 @@ from .routes.email_webhooks import router as email_webhooks_router
 from .routes.email_ops import router as email_ops_router
 from .routes.evolution_management import router as evolution_management_router
 from .routes.evolution_webhooks import router as evolution_webhooks_router
+from .routes.product_facade import router as product_facade_router
+from .routes.provider_integrations import router as provider_integrations_router
+from .routes.onboarding import router as onboarding_router
 
 app = FastAPI(
     title="Mago Bot Platform",
@@ -188,3 +191,6 @@ app.include_router(email_webhooks_router)
 app.include_router(email_ops_router)
 app.include_router(evolution_management_router)
 app.include_router(evolution_webhooks_router)
+app.include_router(product_facade_router)
+app.include_router(provider_integrations_router)
+app.include_router(onboarding_router)

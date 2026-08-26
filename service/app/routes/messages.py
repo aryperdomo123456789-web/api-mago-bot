@@ -15,7 +15,7 @@ from ..platform_limits import DEFAULT_LIMITS, QuotaExceeded, get_service_api_key
 from ..platform_rate_limit import DistributedRateLimitExceeded, enforce_distributed_limit
 from ..platform_resilience import ProviderCircuitOpen, before_provider_call, record_provider_failure, record_provider_success
 from ..platform_crypto import decrypt_secret
-from ..platform_models import Conversation, ConversationEvent, EvolutionInstance, OutboundMessage, PlatformProject, ProviderResource, ServiceApiKey, Tenant, UsageLedgerEntry
+from ..platform_models import Conversation, ConversationEvent, EvolutionInstance, OutboundMessage, PlatformProject, ProviderIntegration, ProviderResource, ServiceApiKey, Tenant, UsageLedgerEntry
 from ..platform_schemas import MessageSendRequest
 from ..providers import DryRunAdapter, EvolutionAdapter, MetaCloudAdapter, ProviderError
 
@@ -39,9 +39,17 @@ def _request_hash(payload: MessageSendRequest) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
-def _adapter(provider_type: str, *, api_key: str | None = None, flavor: str | None = None):
+def _adapter(
+    provider_type: str,
+    *,
+    api_key: str | None = None,
+    flavor: str | None = None,
+    access_token: str | None = None,
+    base_url: str | None = None,
+    api_version: str | None = None,
+):
     if provider_type == "meta_cloud":
-        return MetaCloudAdapter()
+        return MetaCloudAdapter(access_token=access_token, base_url=base_url, api_version=api_version)
     if provider_type == "evolution":
         return EvolutionAdapter(api_key=api_key, flavor=flavor)
     if provider_type == "dry_run" and os.getenv("ALLOW_DRY_RUN_PROVIDER", "false").lower() == "true":
@@ -207,6 +215,22 @@ async def send_message(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="provider resource is not configured")
 
     managed_evolution = None
+    managed_integration = None
+    if resource.provider_type == "meta_cloud":
+        managed_integration = db.scalar(select(ProviderIntegration).where(
+            ProviderIntegration.tenant_id == api_key.tenant_id,
+            ProviderIntegration.project_id == project.id,
+            ProviderIntegration.provider_type == "meta_cloud",
+            ProviderIntegration.external_resource_id == resource.provider_resource_id,
+            ProviderIntegration.status == "active",
+            ProviderIntegration.is_primary.is_(True),
+        ))
+        if not managed_integration:
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={"code": "meta_integration_not_configured", "message": "provider integration is not configured for this organization"},
+            )
     if resource.provider_type == "evolution":
         managed_evolution = db.scalar(select(EvolutionInstance).where(
             EvolutionInstance.resource_id == resource.id,
@@ -283,13 +307,27 @@ async def send_message(
     try:
         provider_api_key = None
         provider_flavor = None
+        provider_access_token = None
+        provider_base_url = None
+        provider_api_version = None
         if managed_evolution:
             provider_api_key = decrypt_secret(managed_evolution.instance_token_encrypted) if managed_evolution.instance_token_encrypted else None
             provider_flavor = managed_evolution.provider_flavor
+        elif managed_integration:
+            try:
+                credentials = json.loads(decrypt_secret(managed_integration.credentials_encrypted))
+            except (TypeError, ValueError, json.JSONDecodeError) as exc:
+                raise ProviderError("provider credentials are invalid", code="provider_credentials_invalid", retryable=False) from exc
+            provider_access_token = str(credentials.get("access_token") or "")
+            provider_base_url = str(credentials.get("base_url") or "") or None
+            provider_api_version = str(credentials.get("api_version") or "") or None
         result = await _adapter(
             resource.provider_type,
             api_key=provider_api_key,
             flavor=provider_flavor,
+            access_token=provider_access_token,
+            base_url=provider_base_url,
+            api_version=provider_api_version,
         ).send_message(resource.provider_resource_id, provider_payload)
     except ProviderError as exc:
         record_provider_failure(

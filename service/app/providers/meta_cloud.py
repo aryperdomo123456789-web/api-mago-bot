@@ -11,10 +11,16 @@ from .base import ProviderError, ProviderMessageResult
 class MetaCloudAdapter:
     provider_type = "meta_cloud"
 
-    def __init__(self) -> None:
-        self.base_url = os.getenv("META_GRAPH_BASE_URL", "https://graph.facebook.com").rstrip("/")
-        self.api_version = os.getenv("META_GRAPH_API_VERSION", "v26.0")
-        self.access_token = os.getenv("META_SYSTEM_USER_TOKEN", "")
+    def __init__(
+        self,
+        *,
+        access_token: str | None = None,
+        base_url: str | None = None,
+        api_version: str | None = None,
+    ) -> None:
+        self.base_url = (base_url or os.getenv("META_GRAPH_BASE_URL", "https://graph.facebook.com")).rstrip("/")
+        self.api_version = api_version or os.getenv("META_GRAPH_API_VERSION", "v26.0")
+        self.access_token = access_token if access_token is not None else os.getenv("META_SYSTEM_USER_TOKEN", "")
         self.timeout = httpx.Timeout(float(os.getenv("META_HTTP_TIMEOUT", "20")))
 
     def _headers(self) -> dict[str, str]:

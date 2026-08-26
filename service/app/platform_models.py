@@ -690,3 +690,29 @@ class ProviderCircuitState(Base):
     last_failure_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_success_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class ProviderIntegration(Base):
+    __tablename__ = "provider_integrations"
+    __table_args__ = (
+        UniqueConstraint("project_id", "provider_type", "external_resource_id", name="uq_provider_integrations_project_resource"),
+        Index("idx_provider_integrations_tenant_status", "tenant_id", "status"),
+        Index("idx_provider_integrations_project_provider", "project_id", "provider_type", "status"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    integration_uuid: Mapped[uuid_lib.UUID] = mapped_column("uuid", UUID(as_uuid=True), default=uuid_lib.uuid4, unique=True, nullable=False)
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("platform_tenants.id", ondelete="CASCADE"), nullable=False)
+    project_id: Mapped[int] = mapped_column(ForeignKey("platform_projects.id", ondelete="CASCADE"), nullable=False)
+    provider_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    display_name: Mapped[str] = mapped_column(String(180), nullable=False)
+    external_resource_id: Mapped[str] = mapped_column(String(180), nullable=False)
+    credentials_encrypted: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(24), nullable=False, default="active", server_default="active")
+    is_primary: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
+    last_tested_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_error: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    metadata_json: Mapped[dict] = mapped_column("metadata", JSON, nullable=False, default=dict)
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("panel_users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

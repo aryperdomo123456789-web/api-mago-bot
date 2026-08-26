@@ -119,6 +119,28 @@ def route_surface_status(request: Request) -> int | None:
     elif path == "/v1/platform" or path.startswith("/v1/platform/"):
         required = "customer"
     elif path in {
+        "/v1/organizations",
+        "/v1/integrations",
+        "/v1/channels",
+        "/v1/messages",
+        "/v1/conversations",
+        "/v1/billing",
+        "/v1/analytics",
+        "/v1/jobs",
+        "/v1/onboarding",
+    } or any(path.startswith(prefix + "/") for prefix in {
+        "/v1/organizations",
+        "/v1/integrations",
+        "/v1/channels",
+        "/v1/messages",
+        "/v1/conversations",
+        "/v1/billing",
+        "/v1/analytics",
+        "/v1/jobs",
+        "/v1/onboarding",
+    }):
+        required = "customer"
+    elif path in {
         "/v1/auth",
         "/v1/account",
         "/v1/users",
