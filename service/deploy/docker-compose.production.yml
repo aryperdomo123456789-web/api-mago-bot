@@ -120,6 +120,27 @@ services:
     networks:
       - platform_backend
 
+  evolution-health-worker:
+    build:
+      context: ./service
+      dockerfile: Dockerfile
+    container_name: mago_evolution_health_worker
+    restart: unless-stopped
+    env_file:
+      - ./service.env
+    command: ["sh", "-lc", "python3 -m app.wait_for_db && exec python3 -m app.evolution_health_worker"]
+    depends_on:
+      platform-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/mago_evolution_health_worker_heartbeat && test $(( $(date +%s) - $(stat -c %Y /tmp/mago_evolution_health_worker_heartbeat) )) -lt 90"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - platform_backend
+
   evolution-api:
     image: evoapicloud/evolution-api:v2.3.7
     container_name: mago_evolution_api

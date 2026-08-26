@@ -604,6 +604,60 @@ class EmailProviderEvent(Base):
     received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
+class EvolutionInstance(Base):
+    __tablename__ = "evolution_instances"
+    __table_args__ = (
+        UniqueConstraint("project_id", "instance_name", name="uq_evolution_instances_project_name"),
+        Index("idx_evolution_instances_tenant_status", "tenant_id", "status"),
+        Index("idx_evolution_instances_project_status", "project_id", "status"),
+        Index("idx_evolution_instances_health", "status", "last_status_check_at"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    instance_uuid: Mapped[uuid_lib.UUID] = mapped_column("uuid", UUID(as_uuid=True), default=uuid_lib.uuid4, unique=True, nullable=False)
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("platform_tenants.id", ondelete="CASCADE"), nullable=False)
+    project_id: Mapped[int] = mapped_column(ForeignKey("platform_projects.id", ondelete="CASCADE"), nullable=False)
+    resource_id: Mapped[int | None] = mapped_column(ForeignKey("provider_resources.id", ondelete="SET NULL"), unique=True, nullable=True)
+    instance_name: Mapped[str] = mapped_column(String(120), nullable=False)
+    provider_flavor: Mapped[str] = mapped_column(String(32), nullable=False, default="evolution_api", server_default="evolution_api")
+    instance_token_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
+    webhook_secret_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
+    webhook_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    subscribed_events: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="provisioning", server_default="provisioning")
+    jid: Mapped[str | None] = mapped_column(String(180), nullable=True)
+    display_phone_number: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    last_status_check_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_connected_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_sync_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    qr_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_error_code: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    last_error_message: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    metadata_json: Mapped[dict] = mapped_column("metadata", JSON, nullable=False, default=dict)
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("panel_users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class EvolutionInstanceEvent(Base):
+    __tablename__ = "evolution_instance_events"
+    __table_args__ = (
+        UniqueConstraint("instance_id", "provider_event_id", name="uq_evolution_instance_event"),
+        Index("idx_evolution_instance_events_instance_received", "instance_id", "received_at"),
+        Index("idx_evolution_instance_events_type_received", "event_type", "received_at"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    event_uuid: Mapped[uuid_lib.UUID] = mapped_column("uuid", UUID(as_uuid=True), default=uuid_lib.uuid4, unique=True, nullable=False)
+    instance_id: Mapped[int] = mapped_column(ForeignKey("evolution_instances.id", ondelete="CASCADE"), nullable=False)
+    provider_event_id: Mapped[str] = mapped_column(String(180), nullable=False)
+    event_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    status: Mapped[str] = mapped_column(String(24), nullable=False, default="accepted", server_default="accepted")
+    payload: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    occurred_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
 class RateLimitBucket(Base):
     __tablename__ = "rate_limit_buckets"
     __table_args__ = (

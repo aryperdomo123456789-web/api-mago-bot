@@ -21,6 +21,8 @@ from ..platform_models import (
     Subscription,
     Tenant,
     UsageLedgerEntry,
+    EvolutionInstance,
+    EvolutionInstanceEvent,
     WebhookDelivery,
     WebhookEvent,
 )
@@ -80,6 +82,10 @@ def overview(_: PanelUser = Depends(_operator), db: Session = Depends(get_db)):
             "welcome_pending": _count(db, OwnerWelcomeDelivery, OwnerWelcomeDelivery.status.in_(("pending", "retrying"))),
             "email_pending": _count(db, EmailDelivery, EmailDelivery.status.in_(("pending", "sending"))),
             "email_failed": _count(db, EmailDelivery, EmailDelivery.status.in_(("failed", "dead_letter", "bounced", "complained"))),
+            "evolution_instances": _count(db, EvolutionInstance, EvolutionInstance.status != "deleted"),
+            "evolution_instances_connected": _count(db, EvolutionInstance, EvolutionInstance.status == "connected"),
+            "evolution_instances_degraded": _count(db, EvolutionInstance, EvolutionInstance.status.in_(("degraded", "failed"))),
+            "evolution_events": _count(db, EvolutionInstanceEvent),
             "subscriptions_active": _count(db, Subscription, Subscription.status.in_(("trialing", "active"))),
         },
         "security": {
@@ -142,6 +148,7 @@ def alerts(_: PanelUser = Depends(_operator), db: Session = Depends(get_db)):
     failed_webhooks = _count(db, WebhookDelivery, WebhookDelivery.status.in_(("failed", "dead_letter")))
     failed_welcome = _count(db, OwnerWelcomeDelivery, OwnerWelcomeDelivery.status.in_(("failed", "dead_letter")))
     failed_email = _count(db, EmailDelivery, EmailDelivery.status.in_(("failed", "dead_letter", "bounced", "complained")))
+    degraded_evolution = _count(db, EvolutionInstance, EvolutionInstance.status.in_(("degraded", "failed")))
     open_circuits = _count(db, ProviderCircuitState, ProviderCircuitState.state == "open")
     items = []
     if failed_webhooks:
@@ -150,6 +157,8 @@ def alerts(_: PanelUser = Depends(_operator), db: Session = Depends(get_db)):
         items.append({"severity": "warning", "code": "owner_welcome_failures", "count": failed_welcome, "action": "inspect welcome DLQ"})
     if failed_email:
         items.append({"severity": "warning", "code": "email_delivery_failures", "count": failed_email, "action": "inspect email delivery DLQ and suppression"})
+    if degraded_evolution:
+        items.append({"severity": "warning", "code": "evolution_instances_degraded", "count": degraded_evolution, "action": "inspect instance status, reconnect and provider health"})
     if open_circuits:
         items.append({"severity": "critical", "code": "provider_circuit_open", "count": open_circuits, "action": "check provider health and cooldown"})
     return {"status": "alert" if items else "ok", "items": items, "generated_at": datetime.now(timezone.utc).isoformat()}
@@ -170,6 +179,13 @@ def queues(_: PanelUser = Depends(_operator), db: Session = Depends(get_db)):
             "pending": _count(db, EmailDelivery, EmailDelivery.status.in_(("pending", "sending"))),
             "sent": _count(db, EmailDelivery, EmailDelivery.status.in_(("sent", "delivered"))),
             "failed": _count(db, EmailDelivery, EmailDelivery.status.in_(("failed", "dead_letter", "bounced", "complained"))),
+        },
+        "evolution": {
+            "instances": _count(db, EvolutionInstance, EvolutionInstance.status != "deleted"),
+            "connected": _count(db, EvolutionInstance, EvolutionInstance.status == "connected"),
+            "pending": _count(db, EvolutionInstance, EvolutionInstance.status.in_(("provisioning", "created", "qr_pending", "pairing_pending", "syncing"))),
+            "degraded": _count(db, EvolutionInstance, EvolutionInstance.status.in_(("degraded", "failed"))),
+            "events": _count(db, EvolutionInstanceEvent),
         },
         "note": "Provider operations remain behind adapters; no global token is returned.",
     }
