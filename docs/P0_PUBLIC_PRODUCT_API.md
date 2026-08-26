@@ -11,25 +11,26 @@ A primeira versão expõe organizações, integrações, canais, mensagens, conv
 | Recurso | Método | Rota | Autorização | Estado |
 |---|---|---|---|---|
 | Organizações | GET | `/v1/organizations` | Sessão | Disponível |
-| Integrações | GET | `/v1/integrations` | Sessão | Disponível; lista resources gerenciados |
+| Integrações | GET/POST/DELETE | `/v1/integrations` | Sessão + membership | Disponível; secrets cifrados e respostas sanitizadas |
 | Canais | GET | `/v1/channels` | Sessão | Disponível; inclui status e capabilities |
-| Mensagem | POST | `/v1/messages?project_id={id}` | `X-API-Key` + `whatsapp:messages:send` | Disponível |
-| Mensagens | GET | `/v1/messages?project_id={id}` | `X-API-Key` + `whatsapp:messages:read` | Disponível |
-| Mensagem | GET | `/v1/messages/{uuid}?project_id={id}` | `X-API-Key` + `whatsapp:messages:read` | Disponível |
-| Conversa | POST/GET | `/v1/conversations?project_id={id}` | API key + scope | Disponível |
-| Timeline | GET/POST | `/v1/conversations/{uuid}/events?project_id={id}` | API key + scope | Disponível |
-| Status | PATCH | `/v1/conversations/{uuid}/status?project_id={id}` | API key + `conversations:write` | Disponível |
+| Mensagem | POST | `/v1/messages?project_id={uuid}` | `X-API-Key` + `whatsapp:messages:send` | Disponível |
+| Mensagens | GET | `/v1/messages?project_id={uuid}` | `X-API-Key` + `whatsapp:messages:read` | Disponível |
+| Mensagem | GET | `/v1/messages/{uuid}?project_id={uuid}` | `X-API-Key` + `whatsapp:messages:read` | Disponível |
+| Conversa | POST/GET | `/v1/conversations?project_id={uuid}` | API key + scope | Disponível |
+| Timeline | GET/POST | `/v1/conversations/{uuid}/events?project_id={uuid}` | API key + scope | Disponível |
+| Status | PATCH | `/v1/conversations/{uuid}/status?project_id={uuid}` | API key + `conversations:write` | Disponível |
 | Billing | GET | `/v1/billing` | Sessão | Resumo; checkout ainda pendente |
 | Analytics | GET | `/v1/analytics?days=30` | Sessão | Ledger agregado |
 | Jobs | GET | `/v1/jobs` | Sessão | Catálogo; listagem detalhada pendente |
+| Onboarding | GET/POST | `/v1/onboarding` e `/v1/onboarding/simulate` | Sessão + membership | Disponível; simulação não envia mensagem |
 
 ## Contrato de envio
 
 ```http
-POST /v1/messages?project_id=42
+POST /v1/messages?project_id=PROJECT_UUID
 X-API-Key: mb_live_<token>
 X-Idempotency-Key: checkout-2026-00000001
-X-Resource-Id: 17
+
 Content-Type: application/json
 
 {"to":"5511999999999","type":"text","text":{"body":"Olá."}}
@@ -43,7 +44,7 @@ O consumidor não envia token Evolution ou token Meta. A resolução acontece no
 
 ## Limites desta entrega
 
-`/v1/media`, `/v1/flows` e checkout real ainda não estão liberados como recursos completos; não são anunciados como prontos apenas por existirem no roadmap. Mídia continua disponível no contrato do provider Evolution, mas upload/storage público por organização precisa de uma próxima migration e de storage assinado. O wizard de onboarding de primeiro valor e billing transacional também são próximos gates.
+`/v1/media`, `/v1/flows` e checkout real ainda não estão liberados como recursos completos; não são anunciados como prontos apenas por existirem no roadmap. Mídia continua disponível no contrato do provider Evolution, mas upload/storage público por organização precisa de uma próxima migration e de storage assinado. O onboarding guiado e a simulação de primeiro valor estão disponíveis; criação automática de fila/flow e billing transacional ainda são próximos gates.
 
 ## Integração com o produto consumidor
 
