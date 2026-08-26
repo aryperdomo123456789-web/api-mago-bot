@@ -54,6 +54,12 @@ for compose_path, service_name in [
     assert service_name in compose, service_name
     assert "app.evolution_health_worker" in compose, compose_path
 
+messages = (ROOT / "service/app/routes/messages.py").read_text()
+assert "managed_evolution" in messages
+assert "evolution_instance_not_connected" in messages
+assert "decrypt_secret" in messages
+assert "EvolutionAdapter(api_key=api_key, flavor=flavor)" in messages
+
 worker = (ROOT / "service/app/evolution_health_worker.py").read_text()
 assert "EVOLUTION_HEALTH_WORKER_HEARTBEAT" in worker
 assert "last_status_check_at" in worker

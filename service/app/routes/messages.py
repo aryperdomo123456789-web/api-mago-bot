@@ -14,7 +14,8 @@ from ..db import SessionLocal
 from ..platform_limits import DEFAULT_LIMITS, QuotaExceeded, get_service_api_key, require_key_scope, consume_quota
 from ..platform_rate_limit import DistributedRateLimitExceeded, enforce_distributed_limit
 from ..platform_resilience import ProviderCircuitOpen, before_provider_call, record_provider_failure, record_provider_success
-from ..platform_models import Conversation, ConversationEvent, OutboundMessage, PlatformProject, ProviderResource, ServiceApiKey, Tenant, UsageLedgerEntry
+from ..platform_crypto import decrypt_secret
+from ..platform_models import Conversation, ConversationEvent, EvolutionInstance, OutboundMessage, PlatformProject, ProviderResource, ServiceApiKey, Tenant, UsageLedgerEntry
 from ..platform_schemas import MessageSendRequest
 from ..providers import DryRunAdapter, EvolutionAdapter, MetaCloudAdapter, ProviderError
 
@@ -38,11 +39,11 @@ def _request_hash(payload: MessageSendRequest) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
-def _adapter(provider_type: str):
+def _adapter(provider_type: str, *, api_key: str | None = None, flavor: str | None = None):
     if provider_type == "meta_cloud":
         return MetaCloudAdapter()
     if provider_type == "evolution":
-        return EvolutionAdapter()
+        return EvolutionAdapter(api_key=api_key, flavor=flavor)
     if provider_type == "dry_run" and os.getenv("ALLOW_DRY_RUN_PROVIDER", "false").lower() == "true":
         return DryRunAdapter()
     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="provider adapter not available")
@@ -205,6 +206,19 @@ async def send_message(
         db.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="provider resource is not configured")
 
+    managed_evolution = None
+    if resource.provider_type == "evolution":
+        managed_evolution = db.scalar(select(EvolutionInstance).where(
+            EvolutionInstance.resource_id == resource.id,
+            EvolutionInstance.status != "deleted",
+        ))
+        if managed_evolution and managed_evolution.status != "connected":
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={"code": "evolution_instance_not_connected", "status": managed_evolution.status},
+            )
+
     stored_payload = payload.model_dump(mode="json")
     stored_payload["_request_hash"] = request_hash
     message = OutboundMessage(
@@ -267,7 +281,16 @@ async def send_message(
         ) from exc
 
     try:
-        result = await _adapter(resource.provider_type).send_message(resource.provider_resource_id, provider_payload)
+        provider_api_key = None
+        provider_flavor = None
+        if managed_evolution:
+            provider_api_key = decrypt_secret(managed_evolution.instance_token_encrypted) if managed_evolution.instance_token_encrypted else None
+            provider_flavor = managed_evolution.provider_flavor
+        result = await _adapter(
+            resource.provider_type,
+            api_key=provider_api_key,
+            flavor=provider_flavor,
+        ).send_message(resource.provider_resource_id, provider_payload)
     except ProviderError as exc:
         record_provider_failure(
             db,
