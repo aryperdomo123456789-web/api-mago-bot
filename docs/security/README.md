@@ -10,6 +10,6 @@ A chave privada não está neste repositório. Ela fica na máquina de operaçã
 
 `/root/.ssh/mago_manus_repo_ed25519`
 
-Status: registrada no GitHub como Deploy Key `Mago Bot Manus - read only`, com acesso somente leitura às branches do repositório.
+Status: registrada no GitHub como Deploy Key `Mago Bot Manus - read write`, com acesso de leitura e escrita às branches do repositório.
 
-Se futuramente o Manus precisar fazer push, criar outra credencial com permissão de escrita e aprovação explícita. Não transformar esta chave em chave de escrita. Nunca publicar a chave privada em issue, commit, variável pública ou arquivo do projeto.
+Essa chave permite ao Manus clonar, auditar, criar branches, editar código e enviar commits. Ela não concede acesso ao painel aaPanel, ao SSH do servidor ou aos segredos de produção. Nunca publicar a chave privada em issue, commit, variável pública ou arquivo do projeto.
