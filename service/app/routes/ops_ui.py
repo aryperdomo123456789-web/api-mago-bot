@@ -18,7 +18,7 @@ def operations_ui(request: Request) -> HTMLResponse:
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Mago Bot Operations Console" />
   <title>Mago Bot | Operations Console</title>
-  <link rel="stylesheet" href="/assets/ops.css" />
+      <link rel="stylesheet" href="/assets/ops.css?v=20260826-2" />
 </head>
 <body>
   <main class="ops-shell">
@@ -68,7 +68,7 @@ def operations_ui(request: Request) -> HTMLResponse:
       </div>
     </section>
   </main>
-  <script src="/assets/ops-app.js" defer></script>
+    <script src="/assets/ops-app.js?v=20260826-2" defer></script>
 </body>
 </html>"""
     return HTMLResponse(html, headers={"Cache-Control": "no-store"})

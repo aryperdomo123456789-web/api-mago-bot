@@ -22,7 +22,7 @@ def platform_ui(request: Request) -> HTMLResponse:
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Mago Bot Control Plane — infraestrutura omnichannel de conversas para operações profissionais." />
   <title>Mago Bot | Control Plane</title>
-  <link rel="stylesheet" href="/assets/platform.css" />
+  <link rel="stylesheet" href="/assets/platform.css?v=20260826-2" />
 </head>
 <body>
   <div class="noise" aria-hidden="true"></div>
@@ -100,7 +100,7 @@ def platform_ui(request: Request) -> HTMLResponse:
     </section>
   </main>
   <script src="/assets/platform-diagnostics.js" defer></script>
-  <script src="/assets/platform-app.js" defer></script>
+  <script src="/assets/platform-app.js?v=20260826-2" defer></script>
 </body>
 </html>"""
     return HTMLResponse(html, headers={"Cache-Control": "no-store"})
