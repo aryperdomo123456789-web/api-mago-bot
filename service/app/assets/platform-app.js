@@ -405,15 +405,61 @@
   $("#mobile-nav-backdrop")?.addEventListener("click", () => syncMobileNav(false));
   document.addEventListener("keydown", (event) => { if (event.key === "Escape") syncMobileNav(false); });
 
-  $("#toggle-auth").addEventListener("click", () => {
-    state.signup = !state.signup;
-    $("#login-form").hidden = state.signup;
-    $("#signup-form").hidden = !state.signup;
-    $("#auth-title").textContent = state.signup ? "Crie seu ambiente." : "Entre no control plane.";
-    $("#auth-copy").textContent = state.signup ? "Seu tenant nasce isolado e pronto para receber projetos." : "A base é profissional. O acesso também precisa ser.";
-    $("#toggle-auth").textContent = state.signup ? "Já tenho acesso" : "Ainda não tenho acesso";
+  const setAuthMode = (mode) => {
+    state.signup = mode === "signup";
+    $("#login-form").hidden = mode !== "login";
+    $("#signup-form").hidden = mode !== "signup";
+    $("#password-reset-form").hidden = mode !== "reset";
+    $("#reset-confirm-form").hidden = mode !== "confirm-reset";
+    $("#toggle-auth").hidden = mode === "reset" || mode === "confirm-reset";
+    $("#toggle-reset").hidden = mode === "reset" || mode === "confirm-reset";
+    $("#auth-title").textContent = mode === "signup" ? "Crie seu ambiente." : mode === "reset" ? "Redefina sua senha." : mode === "confirm-reset" ? "Escolha uma nova senha." : "Entre no control plane.";
+    $("#auth-copy").textContent = mode === "signup" ? "Seu tenant nasce isolado e pronto para receber projetos." : mode === "reset" || mode === "confirm-reset" ? "Acesso seguro, link temporário e nenhuma gambiarra." : "A base é profissional. O acesso também precisa ser.";
+    $("#toggle-auth").textContent = mode === "signup" ? "Já tenho acesso" : "Ainda não tenho acesso";
     hideAlert($("#auth-alert"));
+  };
+
+  $("#toggle-auth").addEventListener("click", () => setAuthMode(state.signup ? "login" : "signup"));
+  $("#toggle-reset").addEventListener("click", () => setAuthMode("reset"));
+
+  $("#password-reset-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    hideAlert($("#auth-alert")); setLoading(form, true);
+    try {
+      await api("/v1/platform/auth/password-reset/request", { method: "POST", body: JSON.stringify(formObject(form)), component: "password-reset-request" });
+      form.reset();
+      setAuthMode("login");
+      showAlert($("#auth-alert"), "Se a conta existir, o link de redefinição foi enviado.", true);
+    } catch (error) { captureError(error, { source: "action", component: "password-reset-request" }); showAlert($("#auth-alert"), error.message); }
+    finally { setLoading(form, false); }
   });
+
+  $("#reset-confirm-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    hideAlert($("#auth-alert")); setLoading(form, true);
+    try {
+      await api("/v1/platform/auth/password-reset/confirm", { method: "POST", body: JSON.stringify(formObject(form)), component: "password-reset-confirm" });
+      form.reset();
+      setAuthMode("login");
+      showAlert($("#auth-alert"), "Senha atualizada. Entre com a nova credencial.", true);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } catch (error) { captureError(error, { source: "action", component: "password-reset-confirm" }); showAlert($("#auth-alert"), error.message); }
+    finally { setLoading(form, false); }
+  });
+
+  const authQuery = new URLSearchParams(window.location.search);
+  const verifyToken = authQuery.get("verify");
+  const resetToken = authQuery.get("reset");
+  if (resetToken) {
+    $("#reset-token").value = resetToken;
+    setAuthMode("confirm-reset");
+  } else if (verifyToken) {
+    void api("/v1/platform/auth/verify-email", { method: "POST", body: JSON.stringify({ token: verifyToken }), component: "email-verification" })
+      .then(() => { setAuthMode("login"); showAlert($("#auth-alert"), "E-mail confirmado. Agora você já pode entrar.", true); window.history.replaceState({}, document.title, window.location.pathname); })
+      .catch((error) => { captureError(error, { source: "action", component: "email-verification" }); showAlert($("#auth-alert"), error.message); setAuthMode("login"); });
+  }
 
   $("#login-form").addEventListener("submit", async (event) => {
     event.preventDefault();

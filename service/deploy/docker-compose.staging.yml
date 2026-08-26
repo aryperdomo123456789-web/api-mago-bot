@@ -94,6 +94,27 @@ services:
     networks:
       - mago_canary_backend
 
+  email-worker-canary:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: mago_email_worker_canary
+    restart: "no"
+    env_file:
+      - ./service.env
+    depends_on:
+      platform-db-canary:
+        condition: service_healthy
+    command: ["sh", "-lc", "python3 -m app.wait_for_db && exec python3 -m app.email_worker"]
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/mago_email_worker_heartbeat && test $(( $(date +%s) - $(stat -c %Y /tmp/mago_email_worker_heartbeat) )) -lt 45"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - mago_canary_backend
+
 volumes:
   mago_canary_platform_pgdata:
   mago_canary_platform_redisdata:

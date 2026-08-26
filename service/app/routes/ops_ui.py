@@ -52,6 +52,7 @@ def operations_ui(request: Request) -> HTMLResponse:
           <button class="ops-nav" data-panel="plans">Planos e Trials</button>
           <button class="ops-nav" data-panel="partners">Parceiros</button>
           <button class="ops-nav" data-panel="whatsapp">WhatsApp / Meta Cloud</button>
+          <button class="ops-nav" data-panel="email">E-mail transacional</button>
           <button class="ops-nav" data-panel="evolution">Evolution API</button>
           <button class="ops-nav" data-panel="stats">Estatísticas</button>
           <button class="ops-nav" data-panel="usage">Uso e quotas</button>

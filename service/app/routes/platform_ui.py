@@ -64,7 +64,17 @@ def platform_ui(request: Request) -> HTMLResponse:
             <label>Slug da organização <span class="optional">opcional</span><input name="tenant_slug" placeholder="minha-empresa" pattern="[a-z0-9-]+" /></label>
             <button class="button button-primary" type="submit">Criar ambiente <span>↗</span></button>
           </form>
+          <form id="password-reset-form" class="form-stack" hidden>
+            <label>Email<input name="email" type="email" autocomplete="email" placeholder="voce@empresa.com" required /></label>
+            <button class="button button-primary" type="submit">Enviar link de redefinição <span>↗</span></button>
+          </form>
+          <form id="reset-confirm-form" class="form-stack" hidden>
+            <input id="reset-token" name="token" type="hidden" />
+            <label>Nova senha<input name="password" type="password" autocomplete="new-password" placeholder="Mínimo de 12 caracteres" required minlength="12" /></label>
+            <button class="button button-primary" type="submit">Salvar nova senha <span>↗</span></button>
+          </form>
           <button id="toggle-auth" class="button button-ghost" type="button">Ainda não tenho acesso</button>
+          <button id="toggle-reset" class="button button-link" type="button">Esqueci minha senha</button>
           <p class="legal-note">Tokens de provider nunca são exibidos no navegador. Para produção, use Meta Cloud API com credenciais server-side e webhook assinado.</p>
         </div>
       </div>
@@ -100,7 +110,7 @@ def platform_ui(request: Request) -> HTMLResponse:
     </section>
   </main>
   <script src="/assets/platform-diagnostics.js" defer></script>
-  <script src="/assets/platform-app.js?v=20260826-2" defer></script>
+  <script src="/assets/platform-app.js?v=20260826-3" defer></script>
 </body>
 </html>"""
     return HTMLResponse(html, headers={"Cache-Control": "no-store"})

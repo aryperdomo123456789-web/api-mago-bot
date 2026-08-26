@@ -30,6 +30,7 @@ from ..surface_auth import enforce_login_surface, require_customer_surface
 from ..platform_crypto import decrypt_secret
 from ..platform_mfa import consume_recovery_code, verify_totp
 from ..owner_welcome import enqueue_owner_welcome
+from ..email_service import enqueue_email
 from ..platform_schemas import (
     MembershipResponse,
     PasswordResetConfirmRequest,
@@ -180,6 +181,17 @@ def signup(payload: PlatformSignupRequest, request: Request, db: Session = Depen
             current_period_end=now + timedelta(days=7),
         ))
         verification_token = _issue_auth_token(db, user.id, "email_verification")
+        enqueue_email(
+            db,
+            tenant_id=tenant.id,
+            user_id=user.id,
+            source_type="platform_signup",
+            source_id=str(user.id),
+            message_type="email_verification",
+            recipient_email=user.email,
+            recipient_name=user.full_name,
+            token=verification_token,
+        )
         db.commit()
     except IntegrityError as exc:
         db.rollback()
@@ -230,6 +242,16 @@ def verify_email(payload: VerifyEmailRequest, request: Request, db: Session = De
         recipient_name=user.full_name,
         opt_in=bool(user.whatsapp_opt_in),
         opt_in_source=user.whatsapp_opt_in_source,
+    )
+    enqueue_email(
+        db,
+        tenant_id=tenant.id if tenant else None,
+        user_id=user.id,
+        source_type="platform_verified",
+        source_id=str(user.id),
+        message_type="welcome",
+        recipient_email=user.email,
+        recipient_name=user.full_name,
     )
     db.commit()
     return {"ok": True, "email_verified": True}
@@ -302,6 +324,17 @@ def password_reset_request(payload: PasswordResetRequest, request: Request, db: 
     result = {"ok": True, "message": "if the account exists, a reset email will be sent"}
     if user and user.is_active:
         reset_token = _issue_auth_token(db, user.id, "password_reset")
+        enqueue_email(
+            db,
+            tenant_id=None,
+            user_id=user.id,
+            source_type="password_reset",
+            source_id=_token_hash(reset_token),
+            message_type="password_reset",
+            recipient_email=user.email,
+            recipient_name=user.full_name,
+            token=reset_token,
+        )
         db.commit()
         if _allow_test_tokens():
             result["reset_token"] = reset_token

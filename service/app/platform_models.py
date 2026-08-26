@@ -518,6 +518,92 @@ class OwnerWelcomeDelivery(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
 
+class EmailSenderIdentity(Base):
+    __tablename__ = "email_sender_identities"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "sender_email", name="uq_email_sender_identity_tenant_email"),
+        Index("idx_email_sender_identities_tenant_status", "tenant_id", "status"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    sender_uuid: Mapped[uuid_lib.UUID] = mapped_column("uuid", UUID(as_uuid=True), default=uuid_lib.uuid4, unique=True, nullable=False)
+    tenant_id: Mapped[int | None] = mapped_column(ForeignKey("platform_tenants.id", ondelete="CASCADE"), nullable=True)
+    sender_email: Mapped[str] = mapped_column(String(255), nullable=False)
+    sender_name: Mapped[str] = mapped_column(String(180), nullable=False, default="Mago Bot", server_default="Mago Bot")
+    reply_to: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    purpose: Mapped[str] = mapped_column(String(40), nullable=False, default="transactional", server_default="transactional")
+    status: Mapped[str] = mapped_column(String(24), nullable=False, default="active", server_default="active")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class EmailDelivery(Base):
+    __tablename__ = "email_deliveries"
+    __table_args__ = (
+        UniqueConstraint("source_type", "source_id", "message_type", name="uq_email_delivery_source"),
+        Index("idx_email_deliveries_claim", "status", "next_attempt_at"),
+        Index("idx_email_deliveries_recipient_created", "recipient_email", "created_at"),
+        Index("idx_email_deliveries_provider_message", "provider_message_id"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    delivery_uuid: Mapped[uuid_lib.UUID] = mapped_column("uuid", UUID(as_uuid=True), default=uuid_lib.uuid4, unique=True, nullable=False)
+    tenant_id: Mapped[int | None] = mapped_column(ForeignKey("platform_tenants.id", ondelete="SET NULL"), nullable=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("panel_users.id", ondelete="SET NULL"), nullable=True)
+    sender_identity_id: Mapped[int | None] = mapped_column(ForeignKey("email_sender_identities.id", ondelete="SET NULL"), nullable=True)
+    source_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    source_id: Mapped[str] = mapped_column(String(180), nullable=False)
+    message_type: Mapped[str] = mapped_column(String(48), nullable=False)
+    recipient_email: Mapped[str] = mapped_column(String(255), nullable=False)
+    recipient_name: Mapped[str | None] = mapped_column(String(180), nullable=True)
+    subject: Mapped[str] = mapped_column(String(255), nullable=False)
+    html_body: Mapped[str] = mapped_column(Text, nullable=False)
+    text_body: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="pending", server_default="pending")
+    attempt_count: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0, server_default="0")
+    provider_message_id: Mapped[str | None] = mapped_column(String(180), nullable=True)
+    provider_event_id: Mapped[str | None] = mapped_column(String(180), nullable=True)
+    error_code: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    next_attempt_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    delivered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class EmailSuppression(Base):
+    __tablename__ = "email_suppressions"
+    __table_args__ = (
+        Index("idx_email_suppressions_reason_created", "reason", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    reason: Mapped[str] = mapped_column(String(40), nullable=False)
+    provider_event_id: Mapped[str | None] = mapped_column(String(180), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class EmailProviderEvent(Base):
+    __tablename__ = "email_provider_events"
+    __table_args__ = (
+        UniqueConstraint("provider", "provider_event_id", name="uq_email_provider_event"),
+        Index("idx_email_provider_events_email_id", "email_id"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    event_uuid: Mapped[uuid_lib.UUID] = mapped_column("uuid", UUID(as_uuid=True), default=uuid_lib.uuid4, unique=True, nullable=False)
+    provider: Mapped[str] = mapped_column(String(40), nullable=False, default="resend", server_default="resend")
+    provider_event_id: Mapped[str] = mapped_column(String(180), nullable=False)
+    event_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    email_id: Mapped[str | None] = mapped_column(String(180), nullable=True)
+    recipient_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    payload: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
 class RateLimitBucket(Base):
     __tablename__ = "rate_limit_buckets"
     __table_args__ = (

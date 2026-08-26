@@ -12,6 +12,7 @@ from ..platform_auth import get_current_platform_user
 from ..platform_models import (
     AuditEvent,
     Conversation,
+    EmailDelivery,
     OwnerWelcomeDelivery,
     PlatformProject,
     ProviderResource,
@@ -77,6 +78,8 @@ def overview(_: PanelUser = Depends(_operator), db: Session = Depends(get_db)):
             "webhook_events": _count(db, WebhookEvent),
             "webhook_deliveries_pending": _count(db, WebhookDelivery, WebhookDelivery.status.in_(("pending", "retrying"))),
             "welcome_pending": _count(db, OwnerWelcomeDelivery, OwnerWelcomeDelivery.status.in_(("pending", "retrying"))),
+            "email_pending": _count(db, EmailDelivery, EmailDelivery.status.in_(("pending", "sending"))),
+            "email_failed": _count(db, EmailDelivery, EmailDelivery.status.in_(("failed", "dead_letter", "bounced", "complained"))),
             "subscriptions_active": _count(db, Subscription, Subscription.status.in_(("trialing", "active"))),
         },
         "security": {
@@ -138,12 +141,15 @@ def list_audit(
 def alerts(_: PanelUser = Depends(_operator), db: Session = Depends(get_db)):
     failed_webhooks = _count(db, WebhookDelivery, WebhookDelivery.status.in_(("failed", "dead_letter")))
     failed_welcome = _count(db, OwnerWelcomeDelivery, OwnerWelcomeDelivery.status.in_(("failed", "dead_letter")))
+    failed_email = _count(db, EmailDelivery, EmailDelivery.status.in_(("failed", "dead_letter", "bounced", "complained")))
     open_circuits = _count(db, ProviderCircuitState, ProviderCircuitState.state == "open")
     items = []
     if failed_webhooks:
         items.append({"severity": "warning", "code": "webhook_delivery_failures", "count": failed_webhooks, "action": "inspect webhook DLQ"})
     if failed_welcome:
         items.append({"severity": "warning", "code": "owner_welcome_failures", "count": failed_welcome, "action": "inspect welcome DLQ"})
+    if failed_email:
+        items.append({"severity": "warning", "code": "email_delivery_failures", "count": failed_email, "action": "inspect email delivery DLQ and suppression"})
     if open_circuits:
         items.append({"severity": "critical", "code": "provider_circuit_open", "count": open_circuits, "action": "check provider health and cooldown"})
     return {"status": "alert" if items else "ok", "items": items, "generated_at": datetime.now(timezone.utc).isoformat()}
@@ -159,6 +165,11 @@ def queues(_: PanelUser = Depends(_operator), db: Session = Depends(get_db)):
         "owner_welcome": {
             "pending": _count(db, OwnerWelcomeDelivery, OwnerWelcomeDelivery.status.in_(("pending", "retrying"))),
             "failed": _count(db, OwnerWelcomeDelivery, OwnerWelcomeDelivery.status.in_(("failed", "dead_letter"))),
+        },
+        "email": {
+            "pending": _count(db, EmailDelivery, EmailDelivery.status.in_(("pending", "sending"))),
+            "sent": _count(db, EmailDelivery, EmailDelivery.status.in_(("sent", "delivered"))),
+            "failed": _count(db, EmailDelivery, EmailDelivery.status.in_(("failed", "dead_letter", "bounced", "complained"))),
         },
         "note": "Provider operations remain behind adapters; no global token is returned.",
     }
