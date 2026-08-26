@@ -716,3 +716,45 @@ class ProviderIntegration(Base):
     created_by: Mapped[int | None] = mapped_column(ForeignKey("panel_users.id", ondelete="SET NULL"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class InboxQueue(Base):
+    __tablename__ = "inbox_queues"
+    __table_args__ = (
+        UniqueConstraint("project_id", "slug", name="uq_inbox_queues_project_slug"),
+        Index("idx_inbox_queues_tenant_status", "tenant_id", "status"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    queue_uuid: Mapped[uuid_lib.UUID] = mapped_column("uuid", UUID(as_uuid=True), default=uuid_lib.uuid4, unique=True, nullable=False)
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("platform_tenants.id", ondelete="CASCADE"), nullable=False)
+    project_id: Mapped[int] = mapped_column(ForeignKey("platform_projects.id", ondelete="CASCADE"), nullable=False)
+    slug: Mapped[str] = mapped_column(String(80), nullable=False)
+    display_name: Mapped[str] = mapped_column(String(120), nullable=False)
+    routing_strategy: Mapped[str] = mapped_column(String(32), nullable=False, default="manual", server_default="manual")
+    status: Mapped[str] = mapped_column(String(24), nullable=False, default="active", server_default="active")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class ConversationAssignment(Base):
+    __tablename__ = "conversation_assignments"
+    __table_args__ = (
+        Index("idx_conversation_assignments_tenant_state", "tenant_id", "state", "updated_at"),
+        Index("idx_conversation_assignments_queue_state", "queue_id", "state", "updated_at"),
+        Index("idx_conversation_assignments_assignee_state", "assignee_user_id", "state", "updated_at"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    assignment_uuid: Mapped[uuid_lib.UUID] = mapped_column("uuid", UUID(as_uuid=True), default=uuid_lib.uuid4, unique=True, nullable=False)
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("platform_tenants.id", ondelete="CASCADE"), nullable=False)
+    project_id: Mapped[int] = mapped_column(ForeignKey("platform_projects.id", ondelete="CASCADE"), nullable=False)
+    conversation_id: Mapped[int] = mapped_column(ForeignKey("conversations.id", ondelete="CASCADE"), unique=True, nullable=False)
+    queue_id: Mapped[int | None] = mapped_column(ForeignKey("inbox_queues.id", ondelete="SET NULL"), nullable=True)
+    assignee_user_id: Mapped[int | None] = mapped_column(ForeignKey("panel_users.id", ondelete="SET NULL"), nullable=True)
+    state: Mapped[str] = mapped_column(String(24), nullable=False, default="unassigned", server_default="unassigned")
+    snoozed_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    claimed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    released_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
