@@ -34,8 +34,16 @@ from .routes.ops import router as ops_router
 from .routes.ops_admin import router as ops_admin_router
 from .routes.ops_ui import router as ops_ui_router
 from .routes.mfa import router as mfa_router
-from .routes.email_webhooks import router as email_webhooks_router
-from .routes.email_ops import router as email_ops_router
+# Resend remains a separate canary package. Do not make First Value production boot
+# depend on files or secrets that are intentionally not promoted yet.
+email_webhooks_router = None
+email_ops_router = None
+try:
+    from .routes.email_webhooks import router as email_webhooks_router
+    from .routes.email_ops import router as email_ops_router
+except ModuleNotFoundError as exc:
+    if exc.name not in {"app.routes.email_webhooks", "app.routes.email_ops"}:
+        raise
 from .routes.evolution_management import router as evolution_management_router
 from .routes.evolution_webhooks import router as evolution_webhooks_router
 from .routes.product_facade import router as product_facade_router
@@ -189,8 +197,10 @@ app.include_router(ops_router)
 app.include_router(ops_admin_router)
 app.include_router(ops_ui_router)
 app.include_router(mfa_router)
-app.include_router(email_webhooks_router)
-app.include_router(email_ops_router)
+if email_webhooks_router is not None:
+    app.include_router(email_webhooks_router)
+if email_ops_router is not None:
+    app.include_router(email_ops_router)
 app.include_router(evolution_management_router)
 app.include_router(evolution_webhooks_router)
 app.include_router(product_facade_router)

@@ -78,10 +78,14 @@ def get_membership(db: Session, user_id: int, tenant_id: int) -> TenantMembershi
 
 
 def require_tenant_permission(db: Session, user: PanelUser, tenant_id: int, permission: str) -> TenantMembership:
-    if user.role in PLATFORM_ROLES:
-        if user.role == "platform_support" and permission not in {"tenant:read", "project:read", "conversation:read", "resource:read", "webhook:read", "audit:read:assigned", "metrics:read"}:
+    if user.role in {"owner", "platform_superadmin", "platform_operator"}:
+        return TenantMembership(tenant_id=tenant_id, user_id=user.id, role=user.role, status="active")
+    if user.role == "platform_support":
+        if permission not in {"tenant:read", "project:read", "conversation:read", "resource:read", "webhook:read", "audit:read:assigned", "metrics:read"}:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="permission denied")
         return TenantMembership(tenant_id=tenant_id, user_id=user.id, role=user.role, status="active")
+    if user.role == "platform_partner":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="assigned tenant permission required")
 
     membership = get_membership(db, user.id, tenant_id)
     if not has_permission(membership.role, permission):

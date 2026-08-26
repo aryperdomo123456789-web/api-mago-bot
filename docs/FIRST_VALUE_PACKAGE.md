@@ -4,6 +4,9 @@
 
 ## Decisão de produto
 
+A conta `owner` possui todos os privilégios customer-scoped sobre tenants ativos e poderes adicionais de plataforma. O owner pode provisionar uma nova organização, membership, assinatura trial, projeto e fila inicial pela Operations Console. A mutation owner-only exige MFA habilitado; o enrollment do MFA fica fora do caminho automático e deve ser concluído pelo proprietário em seu autenticador.
+
+
 O Mago Bot terá uma experiência unificada para Meta Cloud e Evolution, mas providers separados no runtime. O cliente trabalha com organizações, canais, contatos, conversas e mensagens. O adapter é responsável por diferenças de QR, templates, mídia, status e conexão.
 
 Evolution será apresentado como **provider de compatibilidade premium**, sujeito à estabilidade da sessão e às políticas do WhatsApp. Meta Cloud será apresentado como **provider oficial**, com WABA, Phone Number ID e regras oficiais da Meta. Nenhum token ou payload bruto de provider aparece no frontend, OpenAPI público, log ou webhook downstream.
@@ -49,6 +52,10 @@ O inbox mínimo já permite listar conversas, consultar timeline, assumir, trans
 ## Não faz parte deste pacote
 
 Checkout real, CRM avançado, flows versionados, RAG, copilot, QA/ROI completo e promessa de SLA da Meta ficam fora do primeiro valor. Eles entram depois que o caminho de mensagem estiver confiável, observável e testado.
+
+## Gate operacional atual
+
+O runtime de produção e a fachada do produto estão promovidos. O gate restante antes de criar o tenant do laboratório é o MFA da conta owner. Depois do enrollment, a organização e o projeto do laboratório devem ser criados pelo endpoint owner-only ou pelo formulário da Operations Console, nunca com SQL manual. O QR/pairing e o número exclusivo permanecem em laboratório até o E2E opt-in confirmar webhook, inbox, idempotência, entrega e auditoria.
 
 ## Definition of Done
 

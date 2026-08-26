@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import func, select
+from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import Session
 
 from ..db import SessionLocal
@@ -60,6 +61,17 @@ def _safe_datetime(value: datetime | None) -> str | None:
     return value.astimezone(timezone.utc).isoformat() if value else None
 
 
+def _count_optional_email(db: Session, *criteria) -> int:
+    """Degrade the optional Resend surface when migration 0007 is not installed."""
+    try:
+        return _count(db, EmailDelivery, *criteria)
+    except ProgrammingError as exc:
+        db.rollback()
+        if "email_deliveries" not in str(exc).lower():
+            raise
+        return 0
+
+
 @router.get("/overview")
 def overview(_: PanelUser = Depends(_operator), db: Session = Depends(get_db)):
     return {
@@ -80,8 +92,8 @@ def overview(_: PanelUser = Depends(_operator), db: Session = Depends(get_db)):
             "webhook_events": _count(db, WebhookEvent),
             "webhook_deliveries_pending": _count(db, WebhookDelivery, WebhookDelivery.status.in_(("pending", "retrying"))),
             "welcome_pending": _count(db, OwnerWelcomeDelivery, OwnerWelcomeDelivery.status.in_(("pending", "retrying"))),
-            "email_pending": _count(db, EmailDelivery, EmailDelivery.status.in_(("pending", "sending"))),
-            "email_failed": _count(db, EmailDelivery, EmailDelivery.status.in_(("failed", "dead_letter", "bounced", "complained"))),
+            "email_pending": _count_optional_email(db, EmailDelivery.status.in_(("pending", "sending"))),
+            "email_failed": _count_optional_email(db, EmailDelivery.status.in_(("failed", "dead_letter", "bounced", "complained"))),
             "evolution_instances": _count(db, EvolutionInstance, EvolutionInstance.status != "deleted"),
             "evolution_instances_connected": _count(db, EvolutionInstance, EvolutionInstance.status == "connected"),
             "evolution_instances_degraded": _count(db, EvolutionInstance, EvolutionInstance.status.in_(("degraded", "failed"))),
@@ -147,7 +159,7 @@ def list_audit(
 def alerts(_: PanelUser = Depends(_operator), db: Session = Depends(get_db)):
     failed_webhooks = _count(db, WebhookDelivery, WebhookDelivery.status.in_(("failed", "dead_letter")))
     failed_welcome = _count(db, OwnerWelcomeDelivery, OwnerWelcomeDelivery.status.in_(("failed", "dead_letter")))
-    failed_email = _count(db, EmailDelivery, EmailDelivery.status.in_(("failed", "dead_letter", "bounced", "complained")))
+    failed_email = _count_optional_email(db, EmailDelivery.status.in_(("failed", "dead_letter", "bounced", "complained")))
     degraded_evolution = _count(db, EvolutionInstance, EvolutionInstance.status.in_(("degraded", "failed")))
     open_circuits = _count(db, ProviderCircuitState, ProviderCircuitState.state == "open")
     items = []
@@ -176,9 +188,9 @@ def queues(_: PanelUser = Depends(_operator), db: Session = Depends(get_db)):
             "failed": _count(db, OwnerWelcomeDelivery, OwnerWelcomeDelivery.status.in_(("failed", "dead_letter"))),
         },
         "email": {
-            "pending": _count(db, EmailDelivery, EmailDelivery.status.in_(("pending", "sending"))),
-            "sent": _count(db, EmailDelivery, EmailDelivery.status.in_(("sent", "delivered"))),
-            "failed": _count(db, EmailDelivery, EmailDelivery.status.in_(("failed", "dead_letter", "bounced", "complained"))),
+            "pending": _count_optional_email(db, EmailDelivery.status.in_(("pending", "sending"))),
+            "sent": _count_optional_email(db, EmailDelivery.status.in_(("sent", "delivered"))),
+            "failed": _count_optional_email(db, EmailDelivery.status.in_(("failed", "dead_letter", "bounced", "complained"))),
         },
         "evolution": {
             "instances": _count(db, EvolutionInstance, EvolutionInstance.status != "deleted"),

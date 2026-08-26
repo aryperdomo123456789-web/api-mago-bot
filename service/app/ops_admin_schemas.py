@@ -57,6 +57,23 @@ class AdminProjectUpdate(BaseModel):
     is_active: bool | None = None
 
 
+class OwnerTenantProjectCreate(BaseModel):
+    """Create a customer boundary and its first project in one audited owner action."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    company_name: str = Field(min_length=2, max_length=180)
+    tenant_slug: str = Field(min_length=2, max_length=80, pattern=r"^[a-z0-9][a-z0-9-]*[a-z0-9]$")
+    billing_email: str | None = Field(default=None, max_length=255)
+    plan_slug: str = Field(default="start", min_length=2, max_length=64, pattern=r"^[a-z0-9][a-z0-9_-]*$")
+    project_name: str = Field(min_length=2, max_length=180)
+    project_slug: str = Field(min_length=2, max_length=80, pattern=r"^[a-z0-9][a-z0-9-]*[a-z0-9]$")
+    provider_type: Literal["evolution", "meta_cloud"] = "evolution"
+    project_description: str | None = Field(default=None, max_length=4000)
+    create_default_queue: bool = True
+    queue_name: str = Field(default="Atendimento geral", min_length=2, max_length=120)
+
+
 class AdminLicenseCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

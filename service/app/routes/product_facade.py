@@ -61,6 +61,18 @@ def _resolve_project_id(db: Session, project_uuid: UUID, tenant_id: int, key_pro
 
 
 def _tenant_rows(db: Session, user: PanelUser, tenant_uuid: str | None = None):
+    # Global platform roles receive a read/write wildcard over active tenants, but
+    # the synthetic membership is never persisted and carries no customer grant.
+    if user.role in {"owner", "platform_superadmin", "platform_operator"}:
+        query = select(Tenant).where(Tenant.status == "active").order_by(Tenant.created_at.asc())
+        if tenant_uuid:
+            query = query.where(Tenant.tenant_uuid == tenant_uuid)
+        tenants = db.scalars(query).all()
+        return [
+            (tenant, TenantMembership(tenant_id=tenant.id, user_id=user.id, role=user.role, status="active"))
+            for tenant in tenants
+        ]
+
     query = (
         select(Tenant, TenantMembership)
         .join(TenantMembership, TenantMembership.tenant_id == Tenant.id)

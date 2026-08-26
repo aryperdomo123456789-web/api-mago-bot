@@ -20,6 +20,7 @@ OPERATIONS_ROLES = frozenset(
 )
 CUSTOMER_ROLES = frozenset(
     {
+        "owner",
         "tenant_owner",
         "tenant_admin",
         "tenant_developer",

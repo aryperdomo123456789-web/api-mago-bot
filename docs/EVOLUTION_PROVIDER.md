@@ -1,6 +1,6 @@
 # Evolution / Compatibilidade — Mago Bot
 
-**Status:** provider de compatibilidade em canário
+**Status:** provider de compatibilidade em produção controlada; laboratório autenticado pendente de MFA owner
 **Versão do contrato Mago:** 1.0
 **Última revisão:** 2026-08-26
 **Autor:** Manus AI
@@ -14,6 +14,9 @@ O Mago Bot mantém um contrato unificado de projetos, resources, API keys, quota
 > O objetivo de paridade é de experiência operacional: lifecycle, estado confiável, mídia, observabilidade e documentação. O transporte, a política de qualidade e as garantias da Meta continuam diferentes.
 
 ## Arquitetura
+
+A conta `owner` é um operador wildcard administrativo: ela pode operar recursos customer-scoped de tenants ativos e, adicionalmente, provisionar tenant, membership, assinatura, projeto e fila inicial. Essa capacidade não é um bypass anônimo: usa a mesma sessão revogável, permanece restrita à Operations Console e exige MFA habilitado para provisionamento. Usuários tenant continuam limitados ao próprio membership e projeto.
+
 
 ```text
 Cliente / SDK / API key
@@ -48,7 +51,7 @@ A Operations Console expõe a gestão em **Evolution / Compatibilidade**, na sup
 | Logout | `POST /v1/ops/evolution/instances/{id}/logout` | Encerra a sessão do provider |
 | Excluir | `DELETE /v1/ops/evolution/instances/{id}` | Exclui no provider e faz tombstone lógico no Mago |
 
-As mutações exigem owner, `platform_superadmin` ou `platform_operator`, são auditadas e não retornam `instance_token`, `apikey`, senha ou segredo de webhook. Suporte possui leitura operacional limitada; `platform_partner` não acessa a central.
+As mutações exigem owner, `platform_superadmin` ou `platform_operator`, são auditadas e não retornam `instance_token`, `apikey`, senha ou segredo de webhook. O provisionamento owner-only de tenant/projeto exige MFA habilitado e é transacional. Suporte possui leitura operacional limitada; `platform_partner` não acessa a central.
 
 ## Máquina de estados
 

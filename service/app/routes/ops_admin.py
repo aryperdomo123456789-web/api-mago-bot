@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import hashlib
 import secrets
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from ..auth import hash_password
@@ -21,7 +22,7 @@ from ..models import (
     PlanCatalog,
 )
 from ..platform_auth import get_current_platform_user
-from ..platform_models import AuditEvent, PlatformProject, ProviderResource, Tenant, TenantMembership
+from ..platform_models import AuditEvent, InboxQueue, PlatformProject, ProviderResource, Subscription, Tenant, TenantMembership
 from ..platform_rbac import require_platform_role
 from ..schemas import LicenseValidateRequest
 from ..ops_admin_schemas import (
@@ -35,6 +36,7 @@ from ..ops_admin_schemas import (
     AdminUserCreate,
     AdminUserUpdate,
     OwnerProfileAdminUpdate,
+    OwnerTenantProjectCreate,
 )
 
 router = APIRouter(prefix="/v1/ops", tags=["operations-admin"])
@@ -67,6 +69,15 @@ def _mutator(request: Request, db: Session = Depends(get_db)) -> PanelUser:
     return user
 
 
+def _owner_only(request: Request, db: Session = Depends(get_db)) -> PanelUser:
+    user = get_current_platform_user(request, db)
+    if user.role != "owner":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="owner role required")
+    if not user.mfa_enabled:
+        raise HTTPException(status_code=status.HTTP_428_PRECONDITION_REQUIRED, detail="mfa enrollment required")
+    return user
+
+
 def _now() -> datetime:
     return datetime.now(timezone.utc)
 
@@ -91,10 +102,11 @@ def _audit(
     outcome: str = "success",
     reason: str | None = None,
     metadata: dict | None = None,
+    tenant_id: int | None = None,
 ) -> None:
     db.add(
         AuditEvent(
-            tenant_id=None,
+            tenant_id=tenant_id,
             actor_user_id=actor.id,
             action=action,
             resource_type=resource_type,
@@ -357,6 +369,120 @@ def delete_admin_user(
     db.delete(row)
     db.commit()
     return {"ok": True}
+
+
+@router.post("/owner/tenant-projects", status_code=status.HTTP_201_CREATED)
+def create_owner_tenant_project(
+    payload: OwnerTenantProjectCreate,
+    request: Request,
+    actor: PanelUser = Depends(_owner_only),
+    db: Session = Depends(get_db),
+):
+    """Provision a complete customer boundary without direct database access."""
+    if db.scalar(select(Tenant.id).where(Tenant.slug == payload.tenant_slug)):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="tenant slug already exists")
+    plan = db.scalar(select(PlanCatalog).where(PlanCatalog.slug == payload.plan_slug, PlanCatalog.is_active.is_(True)))
+    if not plan:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="active plan not found")
+    if db.scalar(select(PlatformProject.id).where(PlatformProject.slug == payload.project_slug)):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="project slug already exists")
+
+    now = _now()
+    tenant = Tenant(
+        slug=payload.tenant_slug,
+        legal_name=payload.company_name.strip(),
+        billing_email=payload.billing_email.strip().lower() if payload.billing_email else None,
+        plan_slug=payload.plan_slug,
+        status="active",
+        metadata_json={"provisioned_by": "owner", "provisioning_mode": "owner_wildcard"},
+    )
+    db.add(tenant)
+    try:
+        db.flush()
+        db.add(TenantMembership(
+            tenant_id=tenant.id,
+            user_id=actor.id,
+            role="tenant_owner",
+            status="active",
+            accepted_at=now,
+        ))
+        db.add(Subscription(
+            tenant_id=tenant.id,
+            plan_slug=payload.plan_slug,
+            status="trialing",
+            current_period_start=now,
+            current_period_end=now + timedelta(days=plan.trial_days or 0),
+        ))
+        project = PlatformProject(
+            tenant_id=tenant.id,
+            name=payload.project_name.strip(),
+            slug=payload.project_slug,
+            provider_type=payload.provider_type,
+            description=payload.project_description.strip() if payload.project_description else None,
+        )
+        db.add(project)
+        db.flush()
+        queue = None
+        if payload.create_default_queue:
+            queue = InboxQueue(
+                tenant_id=tenant.id,
+                project_id=project.id,
+                slug="atendimento-geral",
+                display_name=payload.queue_name.strip(),
+                routing_strategy="manual",
+                status="active",
+            )
+            db.add(queue)
+            db.flush()
+        _audit(
+            db,
+            request,
+            actor,
+            "owner.tenant_project.create",
+            "tenant",
+            tenant.tenant_uuid,
+            tenant_id=tenant.id,
+            metadata={
+                "project_uuid": str(project.project_uuid),
+                "plan_slug": tenant.plan_slug,
+                "provider_type": project.provider_type,
+                "default_queue": bool(queue),
+            },
+        )
+        db.commit()
+        db.refresh(tenant)
+        db.refresh(project)
+        if queue:
+            db.refresh(queue)
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="tenant or project could not be provisioned") from exc
+
+    return {
+        "ok": True,
+        "tenant": {
+            "id": tenant.id,
+            "uuid": str(tenant.tenant_uuid),
+            "slug": tenant.slug,
+            "legal_name": tenant.legal_name,
+            "status": tenant.status,
+            "plan_slug": tenant.plan_slug,
+        },
+        "project": {
+            "id": project.id,
+            "uuid": str(project.project_uuid),
+            "name": project.name,
+            "slug": project.slug,
+            "provider_type": project.provider_type,
+            "status": project.status,
+        },
+        "queue": {
+            "id": queue.id,
+            "uuid": str(queue.queue_uuid),
+            "slug": queue.slug,
+            "display_name": queue.display_name,
+        } if queue else None,
+    }
 
 
 @router.get("/license-projects")
