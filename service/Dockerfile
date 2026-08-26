@@ -14,5 +14,6 @@ COPY requirements.txt /app/requirements.txt
 RUN pip install -r /app/requirements.txt
 
 COPY app /app/app
+COPY sql /app/sql
 
 CMD ["sh", "-lc", "python3 -m app.wait_for_db && exec gunicorn -w ${WEB_CONCURRENCY:-4} -k uvicorn.workers.UvicornWorker -b 0.0.0.0:${LICENSE_PORT:-4349} app.main:app"]

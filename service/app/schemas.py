@@ -129,6 +129,8 @@ class TrialCreateRequest(BaseModel):
     email: str = Field(min_length=5, max_length=255)
     company_name: str | None = Field(default=None, max_length=180)
     phone: str | None = Field(default=None, max_length=40)
+    whatsapp_opt_in: bool = False
+    whatsapp_opt_in_source: str | None = Field(default=None, max_length=180)
     website: str | None = Field(default=None, max_length=255)
     plan_slug: str = Field(default="start", max_length=64)
     notes: str | None = None

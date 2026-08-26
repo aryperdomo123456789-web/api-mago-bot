@@ -131,16 +131,16 @@ def public_home():
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WhatsApp API Licensing | wp-api</title>
+  <title>WhatsApp API Licensing | Mago Bot API</title>
   <meta name="description" content="Central de licenças para WhatsApp API com emissão, validação, revogação e documentação pronta para revenda e escala." />
   <meta name="theme-color" content="#07111f" />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="WhatsApp API Licensing | wp-api" />
+  <meta property="og:title" content="WhatsApp API Licensing | Mago Bot API" />
   <meta property="og:description" content="Licenças com expiração, projetos separados e operação preparada para escalar uma WhatsApp API." />
   <meta property="og:url" content="https://licensing.mago-bot.com/" />
   <meta property="og:image" content="https://licensing.mago-bot.com/share-card.png" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="WhatsApp API Licensing | wp-api" />
+  <meta name="twitter:title" content="WhatsApp API Licensing | Mago Bot API" />
   <meta name="twitter:description" content="Licenças com expiração, projetos separados e operação preparada para escalar uma WhatsApp API." />
   <meta name="twitter:image" content="https://licensing.mago-bot.com/share-card.png" />
   <style>
@@ -184,7 +184,7 @@ def public_home():
     .nav-inner{display:flex; align-items:center; justify-content:space-between; gap:18px; padding:16px 0}
     .brand{display:flex; align-items:center; gap:12px; font-weight:900; letter-spacing:.02em}
     .brand-mark{width:42px; height:42px; border-radius:14px; overflow:hidden; border:1px solid rgba(255,255,255,.08); background:#0d1525; flex:0 0 auto}
-    .brand-mark img{width:100%; height:100%; object-fit:cover; display:block}
+    .brand-mark svg{width:100%; height:100%; display:block}
     .nav-links{display:flex; align-items:center; gap:20px; color:var(--muted); font-size:.94rem; font-weight:700}
     .nav-links a:hover{color:var(--text)}
     .btn{
@@ -381,9 +381,9 @@ def public_home():
 <body>
   <header class="nav">
     <div class="container nav-inner">
-      <a class="brand" href="#top" aria-label="wp-api Home">
-        <span class="brand-mark"><img src="/brand-logo-ui.png" alt="wp-api" /></span>
-        <span>wp-api</span>
+      <a class="brand" href="#top" aria-label="Mago Bot API Home">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 42 42" role="img" aria-label="Mago Bot"><defs><linearGradient id="mago-logo-gradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#67e8f9"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs><rect width="42" height="42" rx="14" fill="#0c1628"/><path d="M10 29V13h4.6l6.4 8.1 6.4-8.1H32v16h-4.2V19.7l-6.8 8.2h-.2l-6.7-8.2V29H10Z" fill="url(#mago-logo-gradient)"/><circle cx="34" cy="9" r="2" fill="#fbbf24"/></svg></span>
+        <span>Mago Bot API</span>
       </a>
       <nav class="nav-links" aria-label="Navegação principal">
         <a href="#solucao">Solução</a>
@@ -575,7 +575,7 @@ def public_home():
           <h3>Base URL</h3>
           <p><code>https://licensing.mago-bot.com</code></p>
           <h3>Auth</h3>
-          <p><code>x-admin-token</code> para rotas administrativas.</p>
+          <p>Sessão segura no portal <code>/platform</code>; chaves de API ficam restritas ao projeto.</p>
           <h3>Validação</h3>
           <p>O cliente envia a chave e o backend libera ou bloqueia o acesso.</p>
           <h3>Referência</h3>

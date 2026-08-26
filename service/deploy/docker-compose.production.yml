@@ -68,9 +68,57 @@ services:
         condition: service_healthy
     ports:
       - "127.0.0.1:4349:4349"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:4349/health/ready >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     networks:
       - platform_backend
       - evolution_internal
+
+  webhook-worker:
+    build:
+      context: ./service
+      dockerfile: Dockerfile
+    container_name: mago_webhook_worker
+    restart: unless-stopped
+    env_file:
+      - ./service.env
+    command: ["sh", "-lc", "python3 -m app.wait_for_db && exec python3 -m app.webhook_worker"]
+    depends_on:
+      platform-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/mago_webhook_worker_heartbeat && test $(( $(date +%s) - $(stat -c %Y /tmp/mago_webhook_worker_heartbeat) )) -lt 45"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - platform_backend
+
+  owner-welcome-worker:
+    build:
+      context: ./service
+      dockerfile: Dockerfile
+    container_name: mago_owner_welcome_worker
+    restart: unless-stopped
+    env_file:
+      - ./service.env
+    command: ["sh", "-lc", "python3 -m app.wait_for_db && exec python3 -m app.owner_welcome_worker"]
+    depends_on:
+      platform-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/mago_owner_welcome_worker_heartbeat && test $(( $(date +%s) - $(stat -c %Y /tmp/mago_owner_welcome_worker_heartbeat) )) -lt 45"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - platform_backend
 
   evolution-api:
     image: evoapicloud/evolution-api:v2.3.7
