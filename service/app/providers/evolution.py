@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import ipaddress
 import os
 from typing import Any
+from urllib.parse import urlparse
 
 import httpx
 
@@ -60,6 +62,41 @@ class EvolutionAdapter:
                 return str(nested[key_name])
         return None
 
+    @staticmethod
+    def _validate_media(media: dict[str, Any]) -> tuple[str, str, str, str]:
+        media_type = str(media.get("type") or media.get("media_type") or "").lower()
+        if media_type == "media":
+            media_type = "document"
+        if media_type not in {"image", "video", "audio", "document", "sticker"}:
+            raise ProviderError("unsupported media type", code="unsupported_message_type")
+        media_value = media.get("url") or media.get("base64") or media.get("source") or media.get("data")
+        if not isinstance(media_value, str) or not media_value.strip():
+            raise ProviderError("media.url or media.base64 is required", code="invalid_message_payload")
+        media_value = media_value.strip()
+        max_bytes = max(1, int(os.getenv("EVOLUTION_MAX_MEDIA_BYTES", str(16 * 1024 * 1024))))
+        if media.get("url") or media.get("source"):
+            parsed = urlparse(media_value)
+            host = (parsed.hostname or "").lower().rstrip(".")
+            if parsed.scheme != "https" or not host or parsed.username or parsed.password:
+                raise ProviderError("media URL must be HTTPS without credentials", code="invalid_media_url")
+            if host in {"localhost", "localhost.localdomain"} or host.endswith(".local"):
+                raise ProviderError("media URL host is not allowed", code="invalid_media_url")
+            try:
+                address = ipaddress.ip_address(host)
+            except ValueError:
+                address = None
+            if address and (address.is_private or address.is_loopback or address.is_link_local or address.is_reserved or address.is_unspecified):
+                raise ProviderError("media URL host is not allowed", code="invalid_media_url")
+            if len(media_value) > 4096:
+                raise ProviderError("media URL is too long", code="invalid_media_url")
+        else:
+            max_encoded = (max_bytes * 4 // 3) + 4096
+            if len(media_value) > max_encoded:
+                raise ProviderError("media payload exceeds the configured limit", code="media_too_large")
+        caption = str(media.get("caption") or "")[:4096]
+        filename = str(media.get("filename") or media.get("file_name") or "")[:255]
+        return media_type, media_value, caption, filename
+
     async def send_message(self, resource_id: str, payload: dict[str, Any]) -> ProviderMessageResult:
         message_type = str(payload.get("type") or "text").lower()
         if message_type == "text":
@@ -76,16 +113,7 @@ class EvolutionAdapter:
             media = payload.get("media")
             if not isinstance(media, dict):
                 raise ProviderError("media object is required", code="invalid_message_payload")
-            media_type = str(media.get("type") or media.get("media_type") or message_type).lower()
-            if media_type == "media":
-                media_type = "document"
-            if media_type not in {"image", "video", "audio", "document", "sticker"}:
-                raise ProviderError("unsupported media type", code="unsupported_message_type")
-            media_value = media.get("url") or media.get("base64") or media.get("source") or media.get("data")
-            if not isinstance(media_value, str) or not media_value.strip():
-                raise ProviderError("media.url or media.base64 is required", code="invalid_message_payload")
-            caption = str(media.get("caption") or "")
-            filename = str(media.get("filename") or media.get("file_name") or "")
+            media_type, media_value, caption, filename = self._validate_media(media)
             if self.flavor == "evolution_go":
                 path = "/send/media"
                 body = {

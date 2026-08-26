@@ -4,6 +4,7 @@ import os
 import secrets
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urljoin
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import select
@@ -14,7 +15,7 @@ from ..db import SessionLocal
 from ..models import PanelUser
 from ..platform_auth import get_current_platform_user
 from ..platform_crypto import decrypt_secret, encrypt_secret
-from ..platform_models import AuditEvent, EvolutionInstance, PlatformProject, ProviderResource
+from ..platform_models import AuditEvent, EvolutionInstance, EvolutionInstanceEvent, PlatformProject, ProviderResource, WebhookDelivery, WebhookEvent
 from ..platform_rbac import require_platform_role
 from ..platform_ssrf import UnsafeWebhookEndpoint, validate_webhook_endpoint
 from ..providers.base import ProviderError
@@ -22,6 +23,38 @@ from ..providers.evolution_management import EvolutionManagementAdapter
 from ..evolution_schemas import EvolutionActionResponse, EvolutionInstanceCreateRequest, EvolutionInstanceResponse, EvolutionPairRequest
 
 router = APIRouter(prefix="/v1/ops/evolution", tags=["evolution-management"])
+
+
+_CAPABILITY_CATALOG: dict[str, dict[str, object]] = {
+    "evolution_api": {
+        "label": "Evolution API v2",
+        "positioning": "compatibility",
+        "connection_methods": ["qr"],
+        "message_types": ["text", "image", "video", "audio", "document", "sticker"],
+        "events": ["MESSAGE", "SEND_MESSAGE", "CONNECTION", "QRCODE", "READ_RECEIPT", "HISTORY_SYNC", "PRESENCE", "CONTACT", "GROUP"],
+        "capabilities": ["instance_create", "qr_pairing", "text", "image", "video", "audio", "document", "sticker", "webhook", "status", "reconnect", "media"],
+        "requires_lab_validation": True,
+    },
+    "evolution_go": {
+        "label": "Evolution Go",
+        "positioning": "compatibility",
+        "connection_methods": ["qr", "pairing_code"],
+        "message_types": ["text", "image", "video", "audio", "document", "sticker"],
+        "events": ["MESSAGE", "SEND_MESSAGE", "CONNECTION", "QRCODE", "READ_RECEIPT", "HISTORY_SYNC", "PRESENCE", "CONTACT", "GROUP", "NEWSLETTER"],
+        "capabilities": ["instance_create", "qr_pairing", "pairing_code", "text", "image", "video", "audio", "document", "sticker", "webhook", "websocket", "status", "reconnect", "media"],
+        "requires_lab_validation": True,
+    },
+}
+
+_ONBOARDING_STEPS = [
+    {"id": "project", "title": "Selecionar tenant e projeto", "description": "Confirme o projeto responsável pelo resource e as quotas do plano.", "required": True},
+    {"id": "provider", "title": "Escolher o flavor Evolution", "description": "Use o provider instalado e valide as capabilities antes de alternar o flavor.", "required": True},
+    {"id": "instance", "title": "Criar a instância", "description": "Gere um nome único; o Mago cria o resource e cifra o token server-side.", "required": True},
+    {"id": "webhook", "title": "Configurar webhook seguro", "description": "Use HTTPS, endpoint Mago ou destino permitido; nunca encaminhe instanceToken.", "required": True},
+    {"id": "connect", "title": "Conectar por QR ou pairing", "description": "Use somente um número de laboratório no piloto e aguarde o estado connected.", "required": True},
+    {"id": "test", "title": "Executar teste de envio e recebimento", "description": "Teste texto e mídia com idempotência, status e webhook antes de liberar o resource.", "required": True},
+    {"id": "operate", "title": "Operar com health e auditoria", "description": "Monitore estado, falhas, eventos, quotas e reconexões pelo control plane.", "required": True},
+]
 
 
 def get_db():
@@ -34,6 +67,11 @@ def get_db():
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def _capabilities(flavor: str) -> dict[str, object]:
+    catalog = _CAPABILITY_CATALOG.get(flavor, _CAPABILITY_CATALOG["evolution_api"])
+    return {key: list(value) if isinstance(value, list) else value for key, value in catalog.items()}
 
 
 def _operator(request: Request, db: Session, *, write: bool = False) -> PanelUser:
@@ -73,6 +111,7 @@ def _serialize(row: EvolutionInstance) -> EvolutionInstanceResponse:
         display_phone_number=row.display_phone_number,
         webhook_url=row.webhook_url,
         events=row.subscribed_events or [],
+        capabilities=list(_CAPABILITY_CATALOG.get(row.provider_flavor, {}).get("capabilities", [])),
         last_status_check_at=row.last_status_check_at,
         last_connected_at=row.last_connected_at,
         last_sync_at=row.last_sync_at,
@@ -110,14 +149,123 @@ def _public_webhook_url(instance: EvolutionInstance) -> str | None:
 def list_instances(
     request: Request,
     tenant_id: int | None = Query(default=None, gt=0),
+    provider_flavor: str | None = Query(default=None, max_length=32),
+    instance_status: str | None = Query(default=None, alias="status", max_length=32),
+    q: str | None = Query(default=None, max_length=120),
     db: Session = Depends(get_db),
 ):
     _operator(request, db)
+    if provider_flavor and provider_flavor not in _CAPABILITY_CATALOG:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="unsupported Evolution provider flavor")
     query = select(EvolutionInstance).where(EvolutionInstance.status != "deleted")
     if tenant_id is not None:
         query = query.where(EvolutionInstance.tenant_id == tenant_id)
+    if provider_flavor:
+        query = query.where(EvolutionInstance.provider_flavor == provider_flavor)
+    if instance_status:
+        query = query.where(EvolutionInstance.status == instance_status)
+    if q:
+        query = query.where(EvolutionInstance.instance_name.ilike(f"%{q.strip()}%"))
     rows = db.scalars(query.order_by(EvolutionInstance.id.desc())).all()
-    return {"items": [_serialize(row) for row in rows]}
+    return {"items": [_serialize(row) for row in rows], "catalog": [_capabilities(flavor) for flavor in _CAPABILITY_CATALOG]}
+
+
+@router.get("/onboarding")
+def onboarding_guide(request: Request, db: Session = Depends(get_db)):
+    _operator(request, db)
+    return {
+        "provider": "evolution",
+        "positioning": "compatibility",
+        "warning": "Evolution é provider de compatibilidade; não é a WhatsApp Business Platform oficial da Meta.",
+        "steps": _ONBOARDING_STEPS,
+        "success_criteria": ["connected", "text_test_passed", "webhook_accepted", "health_recent"],
+    }
+
+
+@router.get("/capabilities")
+def capability_catalog(
+    request: Request,
+    provider_flavor: str | None = Query(default=None, max_length=32),
+    db: Session = Depends(get_db),
+):
+    _operator(request, db)
+    if provider_flavor and provider_flavor not in _CAPABILITY_CATALOG:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="unsupported Evolution provider flavor")
+    flavors = [provider_flavor] if provider_flavor else list(_CAPABILITY_CATALOG)
+    return {"items": [_capabilities(flavor) for flavor in flavors]}
+
+
+@router.get("/instances/{instance_id}/capabilities")
+def instance_capabilities(instance_id: int, request: Request, db: Session = Depends(get_db)):
+    _operator(request, db)
+    row = _get_instance(db, instance_id)
+    return {"instance": _serialize(row), "capabilities": _capabilities(row.provider_flavor)}
+
+
+@router.get("/instances/{instance_id}/events")
+def list_instance_events(
+    instance_id: int,
+    request: Request,
+    limit: int = Query(default=50, ge=1, le=200),
+    db: Session = Depends(get_db),
+):
+    _operator(request, db)
+    row = _get_instance(db, instance_id)
+    events = db.scalars(select(EvolutionInstanceEvent).where(
+        EvolutionInstanceEvent.instance_id == row.id,
+    ).order_by(EvolutionInstanceEvent.id.desc()).limit(limit)).all()
+    return {
+        "instance_id": row.id,
+        "items": [
+            {
+                "uuid": event.event_uuid,
+                "provider_event_id": event.provider_event_id,
+                "event_type": event.event_type,
+                "status": event.status,
+                "occurred_at": event.occurred_at,
+                "created_at": event.created_at,
+            }
+            for event in events
+        ],
+    }
+
+
+@router.post("/instances/{instance_id}/events/{event_uuid}/replay")
+def replay_instance_event(
+    instance_id: int,
+    event_uuid: UUID,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    actor = _operator(request, db, write=True)
+    row = _get_instance(db, instance_id)
+    event = db.scalar(select(EvolutionInstanceEvent).where(
+        EvolutionInstanceEvent.instance_id == row.id,
+        EvolutionInstanceEvent.event_uuid == event_uuid,
+    ))
+    if not event:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evolution event not found")
+    webhook_event = db.scalar(select(WebhookEvent).where(
+        WebhookEvent.provider_type == "evolution",
+        WebhookEvent.resource_id == row.resource_id,
+        WebhookEvent.provider_event_id == event.provider_event_id,
+    ))
+    if not webhook_event:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="downstream webhook event is unavailable")
+    deliveries = db.scalars(select(WebhookDelivery).where(WebhookDelivery.event_id == webhook_event.id)).all()
+    now = _utcnow()
+    for delivery in deliveries:
+        delivery.status = "pending"
+        delivery.attempt_count = 0
+        delivery.response_code = None
+        delivery.last_error = None
+        delivery.next_attempt_at = now
+        delivery.delivered_at = None
+    webhook_event.status = "accepted"
+    webhook_event.attempts = 0
+    _audit(db, request, actor, row, "evolution.event.replay", reason=f"delivery_count={len(deliveries)}")
+    db.commit()
+    return {"ok": True, "event_uuid": event.event_uuid, "replayed": len(deliveries), "status": "pending"}
 
 
 @router.post("/instances", status_code=status.HTTP_201_CREATED)

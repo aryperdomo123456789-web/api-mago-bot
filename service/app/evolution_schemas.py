@@ -95,6 +95,7 @@ class EvolutionInstanceResponse(BaseModel):
     display_phone_number: str | None = None
     webhook_url: str | None = None
     events: list[str]
+    capabilities: list[str] = Field(default_factory=list)
     last_status_check_at: datetime | None = None
     last_connected_at: datetime | None = None
     last_sync_at: datetime | None = None
