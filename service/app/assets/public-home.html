@@ -6,6 +6,8 @@
   <title>Mago Bot — Mensageria que vira operação</title>
   <meta name="description" content="API e control plane para WhatsApp, automações e integrações. Conecte providers, centralize conversas e escale sua operação com segurança." />
   <meta name="theme-color" content="#071a1b" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/brand-logo-ui.png" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Mago Bot — Mensageria que vira operação" />
   <meta property="og:description" content="Um control plane para conectar canais, automatizar conversas e crescer com controle." />
@@ -85,6 +87,7 @@
     .brand { display: inline-flex; align-items: center; gap: 12px; font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-spacing: -.03em; }
     .brand-mark { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,.13); border-radius: 13px; background: #071c1d; box-shadow: inset 0 0 0 5px rgba(217,255,98,.04); }
     .brand-mark svg { width: 100%; height: 100%; }
+    .brand-image { width: 100%; height: 100%; display: block; object-fit: cover; border-radius: inherit; }
     .brand-name { font-size: 1.08rem; }
     .brand-name em { color: var(--lime); font-style: normal; }
     .nav-links { display: flex; align-items: center; gap: 26px; color: var(--muted); font-size: .92rem; font-weight: 600; }
@@ -278,7 +281,7 @@
   <header class="nav">
     <div class="wrap nav-inner">
       <a class="brand" href="#top" aria-label="Mago Bot — início">
-        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><rect x="1" y="1" width="38" height="38" rx="12" fill="#0B2626" stroke="#355958"/><path d="M10 28V12h4.6l5.4 7.1 5.4-7.1H30v16h-4V18.6l-5.8 7.2h-.3l-5.8-7.2V28H10Z" fill="#D9FF62"/><circle cx="31.5" cy="8.5" r="2.1" fill="#80E4DF"/></svg></span>
+        <span class="brand-mark" aria-hidden="true"><img class="brand-image" src="/brand-logo-ui.png" alt="" width="40" height="40" /></span>
         <span class="brand-name">Mago <em>Bot</em></span>
       </a>
       <nav class="nav-links" data-open="false" aria-label="Navegação principal">
@@ -435,7 +438,7 @@
 
   <footer class="footer">
     <div class="wrap footer-top">
-      <div class="footer-brand"><a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><rect x="1" y="1" width="38" height="38" rx="12" fill="#0B2626" stroke="#355958"/><path d="M10 28V12h4.6l5.4 7.1 5.4-7.1H30v16h-4V18.6l-5.8 7.2h-.3l-5.8-7.2V28H10Z" fill="#D9FF62"/><circle cx="31.5" cy="8.5" r="2.1" fill="#80E4DF"/></svg></span><span class="brand-name">Mago <em>Bot</em></span></a><p>Mensageria, automação e controle para transformar conversa em operação.</p></div>
+      <div class="footer-brand"><a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><img class="brand-image" src="/brand-logo-ui.png" alt="" width="40" height="40" /></span><span class="brand-name">Mago <em>Bot</em></span></a><p>Mensageria, automação e controle para transformar conversa em operação.</p></div>
       <div class="footer-columns"><div class="footer-column"><strong>Produto</strong><a href="#produto">Visão geral</a><a href="#providers">Providers</a><a href="#planos">Planos</a><a href="#faq">FAQ</a></div><div class="footer-column"><strong>Desenvolvedores</strong><a href="/docs">Documentação</a><a href="/v1/reference">Referência</a><a href="/v1/info">Status da API</a><a href="/admin">Login</a></div><div class="footer-column"><strong>Contato</strong><a href="mailto:contato@app.mago-bot.com">E-mail</a><a href="mailto:suporte@app.mago-bot.com">Suporte</a><a href="/admin">Central</a></div></div>
     </div>
     <div class="wrap footer-bottom"><span>© 2026 Mago Bot. Feito para operações que precisam funcionar.</span><span>Meta Cloud = oficial · Evolution = compatibilidade · <a href="/docs">Termos e docs</a></span></div>

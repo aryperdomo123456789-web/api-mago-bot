@@ -7,7 +7,11 @@ template = (root / "service/app/assets/public-home.html").read_text()
 assert 'public-home.html' in route
 assert 'def mago_hero' in route
 assert 'mago-hero-20260826.png' in route
+assert 'mago-logo-192.png' in route
+assert 'mago-favicon.png' in route
 assert 'src="/mago-hero.png"' in template
+assert 'src="/brand-logo-ui.png"' in template
+assert 'rel="icon"' in template
 assert 'data-nav-toggle' in template
 assert 'aria-expanded="false"' in template
 assert '@media (max-width: 780px)' in template

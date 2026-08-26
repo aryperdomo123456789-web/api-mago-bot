@@ -8,7 +8,8 @@ from ..core.config import Settings
 router = APIRouter(tags=["public"])
 settings = Settings()
 ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets"
-BRAND_LOGO_PATH = ASSETS_DIR / "brand-logo-ui-20260805.png"
+BRAND_LOGO_PATH = ASSETS_DIR / "mago-logo-192.png"
+FAVICON_PATH = ASSETS_DIR / "mago-favicon.png"
 SHARE_CARD_PATH = ASSETS_DIR / "share-card-ui-20260805.png"
 HERO_IMAGE_PATH = ASSETS_DIR / "mago-hero-20260826.png"
 
@@ -140,7 +141,7 @@ def share_card_ui():
 
 @router.get("/favicon.ico")
 def favicon():
-    return Response(BRAND_LOGO_PATH.read_bytes(), media_type="image/png")
+    return Response(FAVICON_PATH.read_bytes(), media_type="image/png")
 
 
 @router.get("/mago-hero.png")
