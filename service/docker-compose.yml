@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16
+    container_name: licensing_central_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${LICENSE_DB_NAME:-license_central}
+      POSTGRES_USER: ${LICENSE_DB_USER:-license_user}
+      POSTGRES_PASSWORD: ${LICENSE_DB_PASSWORD:-V9wK3zN8Yp4qL1sT7rX2}
+    volumes:
+      - license_pgdata:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: licensing_central_app
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      LICENSE_DATABASE_URL: postgresql+psycopg://${LICENSE_DB_USER:-license_user}:${LICENSE_DB_PASSWORD:-V9wK3zN8Yp4qL1sT7rX2}@db:5432/${LICENSE_DB_NAME:-license_central}
+      LICENSE_PORT: ${LICENSE_PORT:-4349}
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-4}
+    depends_on:
+      - db
+    ports:
+      - "4349:4349"
+
+volumes:
+  license_pgdata:

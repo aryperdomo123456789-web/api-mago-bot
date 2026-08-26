@@ -1,0 +1,106 @@
+services:
+  platform-db:
+    image: postgres:16-alpine
+    container_name: mago_platform_db
+    restart: unless-stopped
+    env_file:
+      - ./platform-db.env
+    ports:
+      - "127.0.0.1:33366:5432"
+    volumes:
+      - platform_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - platform_backend
+
+  evolution-db:
+    image: postgres:16-alpine
+    container_name: mago_evolution_db
+    restart: unless-stopped
+    env_file:
+      - ./evolution-db.env
+    volumes:
+      - evolution_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - evolution_internal
+
+  platform-redis:
+    image: redis:7-alpine
+    container_name: mago_platform_redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - platform_redisdata:/data
+    networks:
+      - platform_backend
+
+  evolution-redis:
+    image: redis:7-alpine
+    container_name: mago_evolution_redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - evolution_redisdata:/data
+    networks:
+      - evolution_internal
+
+  licensing-app:
+    build:
+      context: ./service
+      dockerfile: Dockerfile
+    container_name: mago_licensing_app
+    restart: unless-stopped
+    env_file:
+      - ./service.env
+    environment:
+      LICENSE_PORT: "4349"
+    depends_on:
+      platform-db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:4349:4349"
+    networks:
+      - platform_backend
+      - evolution_internal
+
+  evolution-api:
+    image: evoapicloud/evolution-api:v2.3.7
+    container_name: mago_evolution_api
+    restart: unless-stopped
+    env_file:
+      - ./evolution.env
+    depends_on:
+      evolution-db:
+        condition: service_healthy
+      evolution-redis:
+        condition: service_started
+    ports:
+      - "127.0.0.1:4348:8080"
+    volumes:
+      - evolution_instances:/evolution/instances
+      - evolution_store:/evolution/store
+    networks:
+      - evolution_internal
+
+volumes:
+  platform_pgdata:
+  evolution_pgdata:
+  platform_redisdata:
+  evolution_redisdata:
+  evolution_instances:
+  evolution_store:
+
+networks:
+  platform_backend:
+    name: mago_platform_backend
+  evolution_internal:
+    name: mago_evolution_internal
