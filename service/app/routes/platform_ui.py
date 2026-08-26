@@ -71,8 +71,12 @@ def platform_ui(request: Request) -> HTMLResponse:
     </section>
 
     <section id="dashboard-view" class="dashboard-layout" hidden>
-      <aside class="sidebar">
-        <div class="brand-lockup"><span class="brand-mark">M</span><span>MAGO BOT</span></div>
+      <button id="mobile-nav-backdrop" class="mobile-nav-backdrop" type="button" aria-label="Fechar menu principal"></button>
+      <aside id="main-sidebar" class="sidebar" aria-label="Navegação principal">
+        <div class="sidebar-head">
+          <div class="brand-lockup"><span class="brand-mark">M</span><span>MAGO BOT</span></div>
+          <button id="sidebar-close" class="sidebar-close" type="button" aria-label="Fechar menu principal">×</button>
+        </div>
         <div class="side-label">OPERAÇÃO</div>
         <nav class="side-nav" aria-label="Navegação principal">
           <button class="side-link active" data-section="overview">Visão geral</button>
@@ -87,7 +91,7 @@ def platform_ui(request: Request) -> HTMLResponse:
       </aside>
       <div class="dashboard-main">
         <header class="topbar">
-          <div><p class="eyebrow">MAGO BOT / OPERAÇÃO</p><h2 id="dashboard-title">Visão geral</h2></div>
+          <div class="topbar-title"><button id="mobile-menu-toggle" class="mobile-menu-toggle" type="button" aria-controls="main-sidebar" aria-expanded="false" aria-label="Abrir menu principal">☰</button><div><p class="eyebrow">MAGO BOT / OPERAÇÃO</p><h2 id="dashboard-title">Visão geral</h2></div></div>
           <div class="topbar-actions"><span id="user-chip" class="user-chip"></span><button id="logout-button" class="button button-ghost small">Sair</button></div>
         </header>
         <div id="dashboard-alert" class="alert" role="alert" hidden></div>

@@ -36,8 +36,12 @@ def operations_ui(request: Request) -> HTMLResponse:
       <p class="security-note">MFA/step-up é requisito do gate de produção. Segredos de provider nunca são exibidos nesta interface.</p>
     </section>
     <section id="ops-dashboard" class="ops-dashboard" hidden>
-      <aside class="ops-sidebar">
-        <div class="ops-brand"><span class="ops-mark">M</span><span>MAGO BOT / OPS</span></div>
+      <button id="ops-nav-backdrop" class="ops-nav-backdrop" type="button" aria-label="Fechar menu operacional"></button>
+      <aside id="ops-sidebar" class="ops-sidebar" aria-label="Navegação operacional">
+        <div class="ops-sidebar-head">
+          <div class="ops-brand"><span class="ops-mark">M</span><span>MAGO BOT / OPS</span></div>
+          <button id="ops-sidebar-close" class="ops-sidebar-close" type="button" aria-label="Fechar menu operacional">×</button>
+        </div>
         <nav aria-label="Operações">
           <button class="ops-nav active" data-panel="overview">Overview</button>
           <button class="ops-nav" data-panel="owner">Proprietário</button>
@@ -58,7 +62,7 @@ def operations_ui(request: Request) -> HTMLResponse:
         <div class="ops-sidebar-footer"><span class="status-dot"></span> Console protegido</div>
       </aside>
       <div class="ops-main">
-        <header class="ops-topbar"><div><p class="eyebrow">MAGO BOT / OPERATIONS</p><h2 id="ops-panel-title">Overview</h2></div><button id="ops-logout" class="ops-button ghost">Sair</button></header>
+        <header class="ops-topbar"><div class="ops-topbar-title"><button id="ops-menu-toggle" class="ops-menu-toggle" type="button" aria-controls="ops-sidebar" aria-expanded="false" aria-label="Abrir menu operacional">☰</button><div><p class="eyebrow">MAGO BOT / OPERATIONS</p><h2 id="ops-panel-title">Overview</h2></div></div><div class="ops-topbar-actions"><button id="ops-logout" class="ops-button ghost">Sair</button></div></header>
         <div id="ops-alert" class="ops-alert" hidden></div>
         <div id="ops-content" class="ops-content"></div>
       </div>

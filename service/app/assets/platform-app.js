@@ -3,6 +3,7 @@
 
   const state = { user: null, tenants: [], projects: [], conversations: [], ownerWhatsapp: null, selectedTenant: null, section: "overview", signup: false };
   const $ = (selector) => document.querySelector(selector);
+  const syncMobileNav = (open) => { const dashboard = $("#dashboard-view"); const toggle = $("#mobile-menu-toggle"); if (!dashboard) return; dashboard.classList.toggle("nav-open", open); document.body.classList.toggle("mobile-nav-open", open); toggle?.setAttribute("aria-expanded", String(open)); toggle?.setAttribute("aria-label", open ? "Fechar menu principal" : "Abrir menu principal"); };
   const diagnostics = window.MagoDiagnostics || { capture: () => null, safeRender: (_name, renderer) => renderer() };
 
   function captureError(error, context = {}) {
@@ -142,6 +143,7 @@
   }
 
   function showAuth() {
+    syncMobileNav(false);
     $("#auth-view").hidden = false;
     $("#dashboard-view").hidden = true;
   }
@@ -149,6 +151,7 @@
   function showDashboard() {
     $("#auth-view").hidden = true;
     $("#dashboard-view").hidden = false;
+    syncMobileNav(false);
     $("#user-chip").textContent = `${state.user.full_name} · ${state.user.role}`;
     const ownerLink = document.querySelector('[data-section="owner-whatsapp"]');
     if (ownerLink) ownerLink.hidden = !["owner", "platform_superadmin", "platform_operator"].includes(state.user.role);
@@ -397,6 +400,11 @@
     diagnostics.safeRender(state.section, renderer, (retry) => renderFallback(label, retry), { state: { section: state.section, tenant: state.selectedTenant?.id } });
   }
 
+  $("#mobile-menu-toggle")?.addEventListener("click", () => syncMobileNav(!$("#dashboard-view")?.classList.contains("nav-open")));
+  $("#sidebar-close")?.addEventListener("click", () => syncMobileNav(false));
+  $("#mobile-nav-backdrop")?.addEventListener("click", () => syncMobileNav(false));
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape") syncMobileNav(false); });
+
   $("#toggle-auth").addEventListener("click", () => {
     state.signup = !state.signup;
     $("#login-form").hidden = state.signup;
@@ -439,7 +447,7 @@
 
   document.querySelectorAll(".side-link").forEach((button) => button.addEventListener("click", async () => {
     document.querySelectorAll(".side-link").forEach((item) => item.classList.remove("active"));
-    button.classList.add("active"); state.section = button.dataset.section;
+    button.classList.add("active"); state.section = button.dataset.section; syncMobileNav(false);
     if (state.selectedTenant) {
       try {
         if (state.section === "projects") await loadProjects();
