@@ -1,8 +1,25 @@
 # Status de Produção — API Mago Bot (snapshot histórico)
 
-Data de referência: 2026-08-14
+Data de referência: 2026-08-27
 
 > **Nota de identidade:** este documento preserva o retrato histórico da fundação de licenças. O produto atual é a **API Mago Bot — Produto de API**; licenças são uma camada legada e não substituem API keys customer/project-scoped.
+
+## Atualização operacional — 2026-08-27
+
+O rebrand e a separação de produto foram publicados na branch `feat/api-mago-bot-rebrand` do repositório `appapiwppmago` (GitHub redirecionado para `api-mago-bot`). O commit de identidade inicial é `6a3cb8b`; o commit efetivamente promovido, incluindo a landing servida pelo FastAPI com links explícitos para as superfícies corretas, é `959d367` (`clarify API Mago Bot product surfaces`). A `main` não foi alterada nem mergeada automaticamente.
+
+| Superfície | URL | Estado verificado |
+|---|---|---|
+| Landing e portal customer da API | `https://app.mago-bot.com/` e `/admin` | Produção respondendo; título e identidade API Mago Bot conferidos |
+| Documentação OpenAPI/Swagger | `https://app.mago-bot.com/docs` | Produção respondendo; JSON OpenAPI parseável |
+| Console owner da API | `https://evo-api.mago-bot.com/ops` | Produção respondendo em host separado; login e MFA/step-up preservados |
+| Produto CRM separado | `https://mago-bot.com` e `https://mago-bot.com/owner/login` | Não foi alterado neste deploy |
+
+O canário em `127.0.0.1:4350` foi reconstruído antes da promoção, passou health live/ready, assets, landing, OpenAPI, autenticação sem credenciais e isolamento de host. O smoke P0 retornou `p0_e2e_surface=ok`, `p0_e2e_openapi=ok` e `p0_e2e_cross_surface=ok`; a fixture autenticada permaneceu não executada por ausência de credenciais de teste controladas. Em seguida, produção foi atualizada sem migrations e somente os serviços que compartilham o código foram recriados: `licensing-app`, `webhook-worker`, `owner-welcome-worker` e `evolution-health-worker`. Todos ficaram healthy, enquanto Evolution API, PostgreSQL, Redis, volumes e o CRM permaneceram fora do escopo.
+
+Antes da promoção foram criados backups de código no VPS, sem substituir arquivos de ambiente: `/opt/mago-platform-canary/backups/service-pre-959d367-20260827T214246Z.tar.gz` e `/opt/mago-platform/backups/service-pre-959d367-20260827T214624Z.tar.gz`. O rollback previsto é retirar o upstream/release atualizado e restaurar o bundle de serviço correspondente; não há rollback destrutivo de schema porque esta entrega não contém migrations.
+
+A validação confirma identidade, rotas, documentação e saúde do runtime. Ela **não** homologa QR, conexão de número, inbound/outbound, mídia, status, reconexão ou entrega real de WhatsApp. Meta Cloud continua sendo o provider oficial; Evolution permanece uma camada de compatibilidade até o contrato operacional ser demonstrado com número e eventos de teste autorizados.
 
 ## Resumo executivo
 
