@@ -304,7 +304,8 @@
         <a href="#docs">Docs</a>
       </nav>
       <div class="nav-actions">
-        <a class="button button-ghost button-small" href="/admin">Entrar</a>
+        <a class="button button-ghost button-small" href="https://app.mago-bot.com/admin">Portal da API</a>
+        <a class="button button-ghost button-small" href="https://evo-api.mago-bot.com/ops">Console owner</a>
         <a class="button button-primary button-small" href="#planos">Começar agora <span aria-hidden="true">↗</span></a>
         <button class="nav-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" data-nav-toggle>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
@@ -319,10 +320,10 @@
         <div class="hero-copy">
           <span class="eyebrow">API • Mensageria • Automação</span>
           <h1 class="hero-title">Conecte conversas. <span class="accent">Escale</span> operações.</h1>
-          <p class="lede">A API Mago Bot é o control plane para transformar WhatsApp em produto: conecte seu provider, centralize eventos, automatize jornadas e mantenha cada operação sob controle.</p>
+          <p class="lede">A API Mago Bot é o control plane para transformar WhatsApp em produto: conecte seu provider, centralize eventos, automatize jornadas e mantenha cada operação sob controle. O CRM Mago Bot é um produto separado para a equipe atender conversas.</p>
           <div class="hero-actions">
             <a class="button button-primary" href="#planos">Ver planos <span aria-hidden="true">↗</span></a>
-            <a class="button button-ghost" href="/docs">Explorar a API</a>
+            <a class="button button-ghost" href="https://app.mago-bot.com/docs">Explorar a API</a>
           </div>
           <p class="hero-note"><span>●</span> Dois providers. Um contrato. Governança de ponta a ponta.</p>
         </div>
@@ -396,7 +397,7 @@
 
     <section class="section" id="docs">
       <div class="wrap showcase">
-        <div class="showcase-copy"><span class="eyebrow">Feito para developers</span><h2>Integre uma vez. Troque o motor quando precisar.</h2><p>Seu backend conversa com o contrato da API Mago Bot. O router da API Mago Bot escolhe o provider e o núcleo preserva idempotência, auditoria, quotas e rastreabilidade.</p><ul class="check-list"><li>API REST e OpenAPI</li><li>API key por projeto</li><li>Idempotency key em operações de envio</li><li>Eventos assinados e replay controlado</li></ul><div class="hero-actions"><a class="button button-primary" href="/docs">Abrir documentação ↗</a></div></div>
+        <div class="showcase-copy"><span class="eyebrow">Feito para developers</span><h2>Integre uma vez. Troque o motor quando precisar.</h2><p>Seu backend conversa com o contrato da API Mago Bot. O router da API Mago Bot escolhe o provider e o núcleo preserva idempotência, auditoria, quotas e rastreabilidade.</p><ul class="check-list"><li>API REST e OpenAPI</li><li>API key por projeto</li><li>Idempotency key em operações de envio</li><li>Eventos assinados e replay controlado</li></ul><div class="hero-actions"><a class="button button-primary" href="https://app.mago-bot.com/docs">Abrir documentação ↗</a></div></div>
         <div class="code-card" aria-label="Exemplo de chamada da API Mago Bot"><div class="code-top"><span class="traffic-lights"><i></i><i></i><i></i></span><span>POST /messages</span><span>REST · JSON</span></div><pre><span class="code-route">POST</span> /v1/projects/<span class="code-string">{project_id}</span>/messages
 
 -H <span class="code-string">"X-API-Key: mb_live_REDACTED"</span>
@@ -427,8 +428,8 @@
       <div class="wrap">
         <div class="section-head"><div><span class="eyebrow">Planos claros</span><h2>Comece enxuto. Cresça com estrutura.</h2></div><p>Planos organizados por capacidade de operação. Valores exibidos são referência inicial e podem mudar conforme provider, volume e suporte.</p></div>
         <div class="plan-grid">
-          <article class="plan-card"><span class="plan-badge">Start</span><h3>Start</h3><p class="plan-description">Para validar uma operação com controle desde o primeiro projeto.</p><div class="plan-price">R$ 49,90 <small>/ mês</small></div><ul class="plan-list"><li>1 projeto</li><li>3 licenças ativas</li><li>Scopes básicos</li><li>Evolution em piloto assistido</li></ul><a class="button button-ghost" href="/admin">Começar no painel</a></article>
-          <article class="plan-card featured"><span class="plan-badge">Mais escolhido</span><h3>Pro</h3><p class="plan-description">Para quem já precisa de organização, automação e mais de um fluxo.</p><div class="plan-price">R$ 99,90 <small>/ mês</small></div><ul class="plan-list"><li>Até 10 projetos</li><li>Auditoria e webhooks</li><li>Quotas por operação</li><li>Rota multi-provider</li></ul><a class="button button-primary" href="/admin">Ativar Pro <span aria-hidden="true">↗</span></a></article>
+          <article class="plan-card"><span class="plan-badge">Start</span><h3>Start</h3><p class="plan-description">Para validar uma operação com controle desde o primeiro projeto.</p><div class="plan-price">R$ 49,90 <small>/ mês</small></div><ul class="plan-list"><li>1 projeto</li><li>3 licenças ativas</li><li>Scopes básicos</li><li>Evolution em piloto assistido</li></ul><a class="button button-ghost" href="https://app.mago-bot.com/admin">Começar no painel</a></article>
+          <article class="plan-card featured"><span class="plan-badge">Mais escolhido</span><h3>Pro</h3><p class="plan-description">Para quem já precisa de organização, automação e mais de um fluxo.</p><div class="plan-price">R$ 99,90 <small>/ mês</small></div><ul class="plan-list"><li>Até 10 projetos</li><li>Auditoria e webhooks</li><li>Quotas por operação</li><li>Rota multi-provider</li></ul><a class="button button-primary" href="https://app.mago-bot.com/admin">Ativar Pro <span aria-hidden="true">↗</span></a></article>
           <article class="plan-card"><span class="plan-badge">Partner</span><h3>Partner</h3><p class="plan-description">Para revendedores e plataformas que precisam de operação assistida.</p><div class="plan-price">Sob consulta</div><ul class="plan-list"><li>Quotas personalizadas</li><li>Onboarding técnico</li><li>Suporte prioritário</li><li>Plano de migração</li></ul><a class="button button-ghost" href="mailto:contato@app.mago-bot.com">Falar com o time</a></article>
         </div>
       </div>
@@ -456,9 +457,9 @@
   <footer class="footer">
     <div class="wrap footer-top">
       <div class="footer-brand"><a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><img class="brand-image" src="/brand-logo-ui.png" alt="" width="40" height="40" /></span><span class="brand-name">API <em>Mago Bot</em></span></a><p>API multi-tenant, mensageria e controle para transformar conversa em operação.</p></div>
-      <div class="footer-columns"><div class="footer-column"><strong>Produto</strong><a href="#produto">Visão geral</a><a href="#providers">Providers</a><a href="#planos">Planos</a><a href="#faq">FAQ</a></div><div class="footer-column"><strong>Desenvolvedores</strong><a href="/docs">Documentação</a><a href="/v1/reference">Referência</a><a href="/v1/info">Status da API</a><a href="/admin">Login</a></div><div class="footer-column"><strong>Contato</strong><a href="mailto:contato@app.mago-bot.com">E-mail</a><a href="mailto:suporte@app.mago-bot.com">Suporte</a><a href="/admin">Central</a></div></div>
+      <div class="footer-columns"><div class="footer-column"><strong>Produto</strong><a href="#produto">Visão geral</a><a href="#providers">Providers</a><a href="#planos">Planos</a><a href="#faq">FAQ</a></div><div class="footer-column"><strong>Desenvolvedores</strong><a href="https://app.mago-bot.com/docs">Documentação</a><a href="/v1/reference">Referência</a><a href="/v1/info">Status da API</a><a href="https://app.mago-bot.com/admin">Portal da API</a><a href="https://evo-api.mago-bot.com/ops">Console owner</a></div><div class="footer-column"><strong>Contato</strong><a href="mailto:contato@app.mago-bot.com">E-mail</a><a href="mailto:suporte@app.mago-bot.com">Suporte</a><a href="https://app.mago-bot.com/admin">Central da API</a></div></div>
     </div>
-    <div class="wrap footer-bottom"><span>© 2026 API Mago Bot. Feito para operações que precisam funcionar.</span><span>Meta Cloud = oficial · Evolution = compatibilidade · <a href="/docs">Termos e docs</a></span></div>
+    <div class="wrap footer-bottom"><span>© 2026 API Mago Bot. Feito para operações que precisam funcionar.</span><span>Meta Cloud = oficial · Evolution = compatibilidade · <a href="https://app.mago-bot.com/docs">Docs da API</a> · <a href="https://evo-api.mago-bot.com/ops">Console owner</a></span></div>
   </footer>
   <script src="/public-app.js" defer></script>
 </body>
