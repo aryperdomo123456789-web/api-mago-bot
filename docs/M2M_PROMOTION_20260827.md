@@ -5,6 +5,7 @@
 **Repositório:** https://github.com/aryperdomo123456789-web/api-mago-bot
 **Superfície cliente:** https://app.mago-bot.com
 **Provider operacional:** Evolution como compatibilidade; Meta Cloud permanece adapter oficial separado.
+**Commit de código/documentação:** `9bef590` — https://github.com/aryperdomo123456789-web/api-mago-bot/commit/9bef590
 
 ## Escopo promovido
 
