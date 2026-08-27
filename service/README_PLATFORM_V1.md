@@ -1,15 +1,15 @@
-# Mago Bot Platform — API v1
+# API Mago Bot — Produto de API v1
 
 **Status:** foundation implementada em `feat/platform-api-v1`  
-**Objetivo:** fornecer uma API própria para operações WhatsApp, com provider oficial Meta Cloud API e adapter de compatibilidade Evolution explicitamente separado.
+**Objetivo:** fornecer a API Mago Bot para operações de mensageria e WhatsApp, com provider oficial Meta Cloud e adapter de compatibilidade Evolution explicitamente separado.
 
-> A plataforma Mago Bot não é a API oficial da Meta. Ela é um control plane e gateway de produto que normaliza recursos, tenants, chaves, quotas e eventos. O provider oficial continua sendo a WhatsApp Business Platform Cloud API.
+> A API Mago Bot não é a API oficial da Meta. Ela é um control plane e gateway de produto que normaliza recursos, tenants, chaves, quotas e eventos. O provider oficial continua sendo a WhatsApp Business Platform Cloud API.
 
 ## Primeiro fluxo de produção
 
 O operador aplica `service/sql/migrations/0001_platform_foundation.sql` no PostgreSQL de staging, injeta os segredos server-side de `service/deploy/service.env.example`, inicia a aplicação e o worker de webhooks, cria ou confirma o tenant, cria um projeto, vincula o Phone Number ID Meta como recurso e emite uma API key com scopes mínimos.
 
-A Meta orienta criar um app WhatsApp, conectar um WABA, guardar o WABA ID e o Phone Number ID, usar um System User com token permanente e configurar um endpoint de webhook próprio para produção.[1] O Mago Bot guarda os tokens apenas no servidor e recebe callbacks em `/v1/webhooks/meta`.
+A Meta orienta criar um app WhatsApp, conectar um WABA, guardar o WABA ID e o Phone Number ID, usar um System User com token permanente e configurar um endpoint de webhook próprio para produção.[1] A API Mago Bot guarda os tokens apenas no servidor e recebe callbacks em `/v1/webhooks/meta`.
 
 ## Endpoints implementados
 
@@ -61,7 +61,7 @@ Cada rota de negócio resolve tenant no servidor e rejeita projeto fora do tenan
 
 O onboarding Embedded Signup, aprovação App Review, cobrança real, rotação automática de System User tokens, templates CRUD, mídia, analytics avançado, circuit breaker distribuído e mTLS ainda precisam ser concluídos antes de vender escala enterprise. O primeiro deploy deve usar WABA/Phone Number de teste e provider Meta Cloud com credenciais do proprietário. Evolution não deve ser anunciado como “API oficial”.
 
-A Meta informa que portfolios recém-criados começam com limite de 250 usuários únicos fora da janela de atendimento e que telefones têm throughput padrão de até 80 mensagens por segundo, além de limite de pareamento de aproximadamente uma mensagem a cada seis segundos para o mesmo usuário.[3] Esses números são limites do provider, não promessa do Mago Bot; o produto deve monitorar e recusar excesso com erro explícito.
+A Meta informa que portfolios recém-criados começam com limite de 250 usuários únicos fora da janela de atendimento e que telefones têm throughput padrão de até 80 mensagens por segundo, além de limite de pareamento de aproximadamente uma mensagem a cada seis segundos para o mesmo usuário.[3] Esses números são limites do provider, não promessa da API Mago Bot; o produto deve monitorar e recusar excesso com erro explícito.
 
 ## Configuração mínima
 
@@ -94,4 +94,4 @@ O portal seguro em `/platform` possui a aba `WhatsApp do dono`, disponível apen
 
 A boas-vindas automática não dispara apenas porque um visitante informou telefone. O cadastro precisa conter telefone válido, checkbox de opt-in marcado e origem do consentimento; a integração owner precisa estar conectada, habilitada e ter template aprovado. O signup seguro enfileira a intenção depois da confirmação de email; o trial público enfileira após a criação com opt-in explícito. A fila `owner_welcome_deliveries` deduplica por origem e é processada por `app.owner_welcome_worker`, que usa somente template Meta, retry exponencial, limite de tentativas e dead letter. A resposta aceita pela Meta não é tratada como entrega final; o status real depende de webhook.
 
-O Compose de staging e produção contém o worker preparado, mas a execução no ambiente produtivo só deve ocorrer após aplicar a migration `0004_owner_whatsapp_welcome.sql`, preencher secrets diretamente no secret manager e validar WABA/Phone Number de teste. QR code, scraping ou sessão WhatsApp Web não fazem parte do conector oficial.
+O Compose de staging e produção da API Mago Bot contém o worker preparado, mas a execução no ambiente produtivo só deve ocorrer após aplicar a migration `0004_owner_whatsapp_welcome.sql`, preencher secrets diretamente no secret manager e validar WABA/Phone Number de teste. QR code, scraping ou sessão WhatsApp Web não fazem parte do conector oficial.

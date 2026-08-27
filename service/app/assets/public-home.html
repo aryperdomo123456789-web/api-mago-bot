@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mago Bot — Mensageria que vira operação</title>
-  <meta name="description" content="API e control plane para WhatsApp, automações e integrações. Conecte providers, centralize conversas e escale sua operação com segurança." />
+  <title>API Mago Bot — Produto de API | Mensageria que vira operação</title>
+  <meta name="description" content="API Mago Bot: control plane multi-tenant para WhatsApp, automações e integrações. Conecte providers, centralize conversas e escale sua operação com segurança." />
   <meta name="theme-color" content="#071a1b" />
   <link rel="icon" type="image/png" sizes="64x64" href="/favicon.ico" />
   <link rel="apple-touch-icon" href="/brand-logo-ui.png" />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Mago Bot — Mensageria que vira operação" />
-  <meta property="og:description" content="Um control plane para conectar canais, automatizar conversas e crescer com controle." />
+  <meta property="og:title" content="API Mago Bot — Produto de API | Mensageria que vira operação" />
+  <meta property="og:description" content="API Mago Bot: um control plane para conectar canais, automatizar conversas e crescer com controle." />
   <meta property="og:url" content="__PUBLIC_BASE_URL__/" />
   <meta property="og:image" content="__PUBLIC_BASE_URL__/share-card.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -289,9 +289,9 @@
 <body>
   <header class="nav">
     <div class="wrap nav-inner">
-      <a class="brand" href="#top" aria-label="Mago Bot — início">
+      <a class="brand" href="#top" aria-label="API Mago Bot — início">
         <span class="brand-mark" aria-hidden="true"><img class="brand-image" src="/brand-logo-ui.png" alt="" width="40" height="40" /></span>
-        <span class="brand-name">Mago <em>Bot</em></span>
+        <span class="brand-name">API <em>Mago Bot</em></span>
       </a>
       <nav class="nav-links" data-open="false" aria-label="Navegação principal">
         <a href="#produto">Produto</a>
@@ -314,9 +314,9 @@
     <section class="hero">
       <div class="wrap hero-grid">
         <div class="hero-copy">
-          <span class="eyebrow">Mensageria • API • Automação</span>
+          <span class="eyebrow">API • Mensageria • Automação</span>
           <h1 class="hero-title">Conecte conversas. <span class="accent">Escale</span> operações.</h1>
-          <p class="lede">O Mago Bot é o control plane para transformar WhatsApp em produto: conecte seu provider, centralize eventos, automatize jornadas e mantenha cada operação sob controle.</p>
+          <p class="lede">A API Mago Bot é o control plane para transformar WhatsApp em produto: conecte seu provider, centralize eventos, automatize jornadas e mantenha cada operação sob controle.</p>
           <div class="hero-actions">
             <a class="button button-primary" href="#planos">Ver planos <span aria-hidden="true">↗</span></a>
             <a class="button button-ghost" href="/docs">Explorar a API</a>
@@ -325,7 +325,7 @@
         </div>
         <div class="hero-art" aria-label="Ilustração original de uma operação de mensageria com automação e API">
           <img src="/mago-hero.png" alt="Pessoa usando um smartphone com fluxos de mensagens e automação ao redor" width="2560" height="1440" fetchpriority="high" />
-          <div class="hero-badge"><i></i> Mago Bot Control Plane</div>
+          <div class="hero-badge"><i></i> API Mago Bot Control Plane</div>
           <div class="hero-console" aria-hidden="true">
             <div class="hero-console-top"><span>Operação em tempo real</span><span class="console-status">online</span></div>
             <div class="console-row"><span>Eventos processados</span><strong>2.481</strong></div>
@@ -334,7 +334,7 @@
           </div>
         </div>
       </div>
-      <div class="wrap trust-strip" aria-label="Pilares do Mago Bot">
+      <div class="wrap trust-strip" aria-label="Pilares da API Mago Bot">
         <div class="trust-item"><strong>API unificada</strong><span>Um contrato para seus canais.</span></div>
         <div class="trust-item"><strong>Multi-tenant</strong><span>Projetos, escopos e quotas isolados.</span></div>
         <div class="trust-item"><strong>Eventos rastreáveis</strong><span>Webhook, replay e auditoria.</span></div>
@@ -393,7 +393,7 @@
 
     <section class="section" id="docs">
       <div class="wrap showcase">
-        <div class="showcase-copy"><span class="eyebrow">Feito para developers</span><h2>Integre uma vez. Troque o motor quando precisar.</h2><p>Seu backend conversa com o contrato Mago. O router escolhe o provider e o núcleo preserva idempotência, auditoria, quotas e rastreabilidade.</p><ul class="check-list"><li>API REST e OpenAPI</li><li>API key por projeto</li><li>Idempotency key em operações de envio</li><li>Eventos assinados e replay controlado</li></ul><div class="hero-actions"><a class="button button-primary" href="/docs">Abrir documentação ↗</a></div></div>
+        <div class="showcase-copy"><span class="eyebrow">Feito para developers</span><h2>Integre uma vez. Troque o motor quando precisar.</h2><p>Seu backend conversa com o contrato da API Mago Bot. O router da API Mago Bot escolhe o provider e o núcleo preserva idempotência, auditoria, quotas e rastreabilidade.</p><ul class="check-list"><li>API REST e OpenAPI</li><li>API key por projeto</li><li>Idempotency key em operações de envio</li><li>Eventos assinados e replay controlado</li></ul><div class="hero-actions"><a class="button button-primary" href="/docs">Abrir documentação ↗</a></div></div>
         <div class="code-card" aria-label="Exemplo de chamada da API Mago Bot"><div class="code-top"><span class="traffic-lights"><i></i><i></i><i></i></span><span>POST /messages</span><span>REST · JSON</span></div><pre><span class="code-route">POST</span> /v1/projects/<span class="code-string">{project_id}</span>/messages
 
 -H <span class="code-string">"X-API-Key: mb_live_REDACTED"</span>
@@ -403,7 +403,7 @@
   <span class="code-key">"to"</span>: <span class="code-string">"5511999999999"</span>,
   <span class="code-key">"type"</span>: <span class="code-string">"text"</span>,
   <span class="code-key">"text"</span>: {
-    <span class="code-key">"body"</span>: <span class="code-string">"Olá do Mago Bot."</span>
+    <span class="code-key">"body"</span>: <span class="code-string">"Olá da API Mago Bot."</span>
   }
 }</pre></div>
       </div>
@@ -452,10 +452,10 @@
 
   <footer class="footer">
     <div class="wrap footer-top">
-      <div class="footer-brand"><a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><img class="brand-image" src="/brand-logo-ui.png" alt="" width="40" height="40" /></span><span class="brand-name">Mago <em>Bot</em></span></a><p>Mensageria, automação e controle para transformar conversa em operação.</p></div>
+      <div class="footer-brand"><a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><img class="brand-image" src="/brand-logo-ui.png" alt="" width="40" height="40" /></span><span class="brand-name">API <em>Mago Bot</em></span></a><p>API multi-tenant, mensageria e controle para transformar conversa em operação.</p></div>
       <div class="footer-columns"><div class="footer-column"><strong>Produto</strong><a href="#produto">Visão geral</a><a href="#providers">Providers</a><a href="#planos">Planos</a><a href="#faq">FAQ</a></div><div class="footer-column"><strong>Desenvolvedores</strong><a href="/docs">Documentação</a><a href="/v1/reference">Referência</a><a href="/v1/info">Status da API</a><a href="/admin">Login</a></div><div class="footer-column"><strong>Contato</strong><a href="mailto:contato@app.mago-bot.com">E-mail</a><a href="mailto:suporte@app.mago-bot.com">Suporte</a><a href="/admin">Central</a></div></div>
     </div>
-    <div class="wrap footer-bottom"><span>© 2026 Mago Bot. Feito para operações que precisam funcionar.</span><span>Meta Cloud = oficial · Evolution = compatibilidade · <a href="/docs">Termos e docs</a></span></div>
+    <div class="wrap footer-bottom"><span>© 2026 API Mago Bot. Feito para operações que precisam funcionar.</span><span>Meta Cloud = oficial · Evolution = compatibilidade · <a href="/docs">Termos e docs</a></span></div>
   </footer>
   <script src="/public-app.js" defer></script>
 </body>

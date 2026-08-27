@@ -1,14 +1,14 @@
-# Mago Bot — Guia de Produto e API
+# API Mago Bot — Guia de Produto e API
 
 **Versão do contrato:** 1.0
 **Data:** 26 de agosto de 2026
 **Autor:** Manus AI
 
-> **Posicionamento:** o Mago Bot é uma plataforma multi-tenant de operação de mensagens e conversas. Meta Cloud é o provider oficial. Evolution é um provider de compatibilidade premium para laboratório, atendimento opt-in e operações controladas. A experiência pode ser unificada; as garantias, políticas, autenticação e semântica do provider continuam separadas.
+> **Posicionamento:** a API Mago Bot é um produto multi-tenant de operação de mensagens e conversas. Meta Cloud é o provider oficial. Evolution é um provider de compatibilidade premium para laboratório, atendimento opt-in e operações controladas. A experiência pode ser unificada; as garantias, políticas, autenticação e semântica do provider continuam separadas.
 
 ## 1. O produto
 
-O Mago Bot organiza a operação em **organização**, **projeto**, **provider**, **canal**, **contato**, **conversa**, **mensagem**, **fila** e **webhook**. O control plane concentra autenticação, autorização, idempotência, quotas, auditoria, tracing, retries, circuit breaker e normalização de erros. O cliente integra uma superfície estável do Mago Bot sem acessar diretamente a Evolution API, credenciais globais ou bancos internos.
+A API Mago Bot organiza a operação em **organização**, **projeto**, **provider**, **canal**, **contato**, **conversa**, **mensagem**, **fila** e **webhook**. O control plane concentra autenticação, autorização, idempotência, quotas, auditoria, tracing, retries, circuit breaker e normalização de erros. O cliente integra uma superfície estável da API Mago Bot sem acessar diretamente a Evolution API, credenciais globais ou bancos internos.
 
 O produto foi desenhado para que a primeira ativação seja operacionalmente guiada: criar um workspace, escolher um provider, conectar o canal, configurar a fila, receber a primeira conversa e responder com rastreabilidade. A meta de paridade é de **experiência operacional**, e não de equivalência regulatória, de transporte ou de SLA com a Meta.
 
@@ -19,7 +19,7 @@ O produto foi desenhado para que a primeira ativação seja operacionalmente gui
 | Meta Cloud | Operação oficial com WABA e Phone Number ID | Guardadas e cifradas por organização/projeto | Sujeita às políticas, templates, limites e disponibilidade da Meta |
 | Evolution | Compatibilidade premium para sessão, QR/pairing e laboratório | Token global e tokens de instância server-side | Não é a WhatsApp Business Platform oficial; estabilidade depende da sessão/provider |
 
-A camada Meta Cloud deve ser escolhida para operações que dependem das garantias oficiais, políticas de template e previsibilidade da plataforma. A camada Evolution pode acelerar pilotos e operações controladas, mas não deve ser apresentada como “API oficial alternativa”. O Mago Bot não promete que a Evolution reproduzirá políticas, qualidade, revisão ou SLA da Meta.
+A camada Meta Cloud deve ser escolhida para operações que dependem das garantias oficiais, políticas de template e previsibilidade da plataforma. A camada Evolution pode acelerar pilotos e operações controladas, mas não deve ser apresentada como “API oficial alternativa”. A API Mago Bot não promete que a Evolution reproduzirá políticas, qualidade, revisão ou SLA da Meta.
 
 ## 3. Modelo de acesso
 
@@ -43,7 +43,7 @@ O fluxo recomendado para um piloto é o seguinte:
 2. Em **Clientes / Tenants**, cria a organização e o projeto do laboratório com provider explícito `evolution`; a transação cria membership do owner, assinatura trial e fila inicial opcional.
 3. Em **Evolution / Compatibilidade**, cria o canal com nome amigável e inicia QR ou pairing conforme o flavor disponível.
 4. O operador acompanha estados `provisioning`, `created`, `qr_pending`, `connecting`, `connected`, `degraded`, `disconnected`, `failed` e `deleted`.
-5. O Mago Bot configura o callback gerenciado e normaliza eventos inbound no Conversation Core.
+5. A API Mago Bot configura o callback gerenciado e normaliza eventos inbound no Conversation Core.
 6. O agente abre o inbox, faz claim ou assignment, registra nota e responde com idempotência.
 7. O owner observa health, auditoria, usage e falhas antes de considerar a troca do número de laboratório pelo número de produção.
 
@@ -51,7 +51,7 @@ QR, pairing, token de instância, API key global e segredo de webhook são dados
 
 ## 5. Contrato de headers
 
-Toda mutation de integração deve enviar `Idempotency-Key`. O cliente pode enviar `X-Request-Id` para correlação; se não enviar, o Mago Bot gera um request ID. API keys devem possuir apenas os scopes necessários.
+Toda mutation de integração deve enviar `Idempotency-Key`. O cliente pode enviar `X-Request-Id` para correlação; se não enviar, a API Mago Bot gera um request ID. API keys devem possuir apenas os scopes necessários.
 
 ```http
 Authorization: Bearer <session-or-token>
@@ -78,7 +78,7 @@ O cliente deve tratar erros pelo código e não pelo texto livre. O formato espe
 }
 ```
 
-Erros de autenticação, membership, payload inválido ou recurso inexistente não devem entrar em retry cego. Um erro de provider pode ser temporário, mas o circuito do provider e o ledger de uso pertencem ao Mago Bot.
+Erros de autenticação, membership, payload inválido ou recurso inexistente não devem entrar em retry cego. Um erro de provider pode ser temporário, mas o circuito do provider e o ledger de uso pertencem à API Mago Bot.
 
 ## 7. Superfícies de API
 

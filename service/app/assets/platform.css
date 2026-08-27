@@ -239,3 +239,47 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
+
+
+/* Product modules: guided onboarding, channels and inbox. */
+.form-hint { margin: 0; color: var(--faint); font-size: 0.76rem; line-height: 1.55; }
+.onboarding-hero, .channel-hero, .inbox-hero { border-color: rgba(108, 217, 255, 0.24); background: linear-gradient(145deg, rgba(15, 38, 60, 0.94), rgba(9, 14, 25, 0.95)); }
+.progress-meta { display: flex; justify-content: space-between; gap: 12px; margin-top: 23px; color: var(--muted); font-size: 0.76rem; }
+.progress-meta strong { color: var(--text); }
+.progress-track { height: 10px; margin-top: 10px; overflow: hidden; border-radius: 999px; background: rgba(255, 255, 255, 0.08); }
+.progress-fill { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--blue), var(--violet)); box-shadow: 0 0 18px rgba(108, 217, 255, 0.32); transition: width 300ms var(--ease-out); }
+.onboarding-steps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.onboarding-step { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 15px; background: rgba(255, 255, 255, 0.025); }
+.onboarding-step.is-complete { border-color: rgba(119, 229, 178, 0.28); background: rgba(119, 229, 178, 0.055); }
+.step-marker { display: grid; place-items: center; flex: 0 0 auto; width: 30px; height: 30px; border-radius: 10px; color: #07111d; background: linear-gradient(135deg, var(--blue), var(--violet)); font-size: 0.76rem; font-weight: 950; }
+.onboarding-step.is-complete .step-marker { color: #082115; background: var(--green); }
+.onboarding-step strong { display: block; color: #eaf3ff; font-size: 0.8rem; }
+.onboarding-step small { display: block; margin-top: 4px; color: var(--muted); font-size: 0.7rem; }
+.channel-list, .inbox-list { display: grid; gap: 11px; }
+.channel-row, .inbox-row { min-width: 0; padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255, 255, 255, 0.025); }
+.channel-row-head, .inbox-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.channel-row h4 { margin: 5px 0 0; color: var(--text); font-size: 1rem; }
+.channel-row .muted { margin: 6px 0 0; font-size: 0.75rem; }
+.channel-row .button-row { margin-top: 14px; }
+.channel-output { display: grid; justify-items: start; gap: 10px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
+.channel-qr { display: block; width: min(100%, 260px); aspect-ratio: 1; padding: 10px; border-radius: 14px; background: #fff; image-rendering: pixelated; }
+.pairing-code { padding: 14px 17px; border: 1px solid rgba(108, 217, 255, 0.3); border-radius: 14px; color: var(--blue); background: rgba(108, 217, 255, 0.06); font: 900 1.55rem/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.2em; }
+.inbox-row { align-items: center; }
+.inbox-row-main { display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; min-width: 0; padding: 0; border: 0; color: var(--text); background: transparent; text-align: left; }
+.inbox-row-main > div { min-width: 0; }
+.inbox-row-main strong { display: block; overflow-wrap: anywhere; }
+.inbox-row-main small { display: block; margin-top: 5px; color: var(--muted); overflow-wrap: anywhere; }
+.inbox-row > .button-row { flex: 0 0 auto; margin-top: 0; }
+@media (max-width: 800px) {
+  .onboarding-steps { grid-template-columns: 1fr; }
+  .channel-row-head, .inbox-row { flex-direction: column; }
+  .inbox-row-main { align-items: flex-start; }
+  .channel-row .button-row, .inbox-row .button-row { width: 100%; }
+  .channel-row .button-row .button, .inbox-row .button-row .button { flex: 1 1 140px; }
+}
+@media (max-width: 560px) {
+  .progress-meta { align-items: flex-start; flex-direction: column; gap: 5px; }
+  .onboarding-step { padding: 12px; }
+  .channel-row, .inbox-row { padding: 14px; }
+  .pairing-code { max-width: 100%; font-size: 1.15rem; overflow-wrap: anywhere; }
+}

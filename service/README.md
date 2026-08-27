@@ -1,135 +1,71 @@
-# WhatsApp API Licensing
+# API Mago Bot — Produto de API
 
-Central de licenças, chaves e auditoria para um produto de WhatsApp API.
+Serviço FastAPI do **API Mago Bot**, um control plane multi-tenant para mensageria, canais, conversas, automação, webhooks e operação profissional.
 
-## O que este serviço resolve
+## Posicionamento
 
-- emissão de chaves com expiração
-- validação online de licença
-- revogação imediata
-- separação por projeto, domínio e scopes
-- trilha de auditoria para alto volume
-- base para distribuir acesso a uma WhatsApp API própria
+O Mago Bot é a camada de produto e governança. **Meta Cloud** é o provider oficial da WhatsApp Business Platform quando configurado. **Evolution** é um provider de compatibilidade premium para pilotos e operações opt-in; não deve ser apresentado como API oficial da Meta.
 
-## Rotas principais
+## Superfícies
 
-- `GET /` página pública de produto e documentação
-- `GET /v1/info` catálogo público da API
-- `GET /v1/reference` referência estruturada com fluxos, endpoints e scopes
-- `POST /v1/projects` cria projeto
-- `GET /v1/projects` lista projetos
-- `POST /v1/keys` emite chave
-- `GET /v1/keys` lista chaves
-- `GET /v1/keys/{id}` detalha chave
-- `POST /v1/keys/validate` valida chave
-- `POST /v1/keys/{id}/revoke` revoga chave
+- `https://evo-api.mago-bot.com`: Operations Console restrita para owner e papéis operacionais.
+- `https://app.mago-bot.com`: portal customer-scoped para organizações, projetos, canais, inbox e API keys.
+- `https://app.mago-bot.com/docs`: documentação OpenAPI.
+
+## Contratos principais
+
+- `POST /v1/platform/auth/signup`: cria usuário, organização, membership e trial.
+- `POST /v1/platform/auth/login`: cria sessão opaca e revogável.
+- `GET /v1/platform/tenants/me`: lista organizações do usuário.
+- `GET/POST /v1/platform/projects`: lista e cria projetos no tenant permitido.
+- `POST /v1/platform/projects/{id}/keys`: cria API key de projeto; o token aparece uma única vez.
+- `GET /v1/platform/projects/{id}/keys`: lista apenas prefixo, estado e metadados.
+- `GET/POST /v1/organizations`: fachada de organizações customer-scoped.
+- `GET/POST /v1/channels`: lifecycle de canais conforme provider e membership.
+- `GET/POST /v1/conversations`: conversa e identidade no tenant correto.
+- `POST /v1/messages`: envio normalizado com `X-API-Key` e idempotência.
+- `GET/POST /v1/onboarding`: checklist e primeiro valor.
+- `GET/POST /v1/inbox`: filas, assignment, claim, snooze, resolve e timeline.
+- `/v1/webhooks/*`: eventos assinados, deduplicados e auditáveis.
+- `/health/live` e `/health/ready`: liveness e readiness operacional.
+
+## Headers de integração
+
+Mutations devem enviar `X-Idempotency-Key` com pelo menos 16 caracteres. `X-Request-Id` pode ser fornecido pelo integrador e é propagado para rastreabilidade; quando ausente, a API gera um identificador. API keys devem ser enviadas em `X-API-Key` e nunca em query string, URL, frontend público ou log.
+
+```bash
+curl -X POST https://app.mago-bot.com/v1/projects/{project_id}/messages \\
+  -H "X-API-Key: mb_live_REDACTED" \\
+  -H "X-Idempotency-Key: pedido-0001" \\
+  -H "Content-Type: application/json" \\
+  -d '{"to":"5511999999999","type":"text","text":{"body":"Olá da API Mago Bot."}}'
+```
 
 ## Compatibilidade legada
 
-As rotas antigas continuam ativas:
+As rotas `/v1/licenses*`, o antigo catálogo de licenças e a tela **API keys e licenças legadas** continuam disponíveis apenas para migração. Elas não devem ser confundidas com as credenciais customer/project-scoped do produto atual.
 
-- `POST /v1/licenses/projects`
-- `POST /v1/licenses`
-- `POST /v1/licenses/validate`
-- `GET /v1/licenses/projects`
-- `GET /v1/licenses`
-- `GET /v1/licenses/{id}`
-- `POST /v1/licenses/{id}/revoke`
+## Segurança
 
-## Autenticação
+Sessões são server-side, opacas, revogáveis e protegidas por cookie seguro. API keys são armazenadas como hash e exibidas somente na criação. Segredos Meta/Evolution são server-side e cifrados. Cada operação resolve tenant e projeto no servidor. O Manager Evolution permanece privado e não faz parte do contrato público.
 
-Operações administrativas exigem o cabeçalho:
-
-```bash
-x-admin-token: SEU_TOKEN_ADMIN
-```
-
-Validação de licença não usa token administrativo. O cliente envia apenas a chave emitida.
-
-## Formato da chave
-
-A chave emitida retorna:
-
-- `token` para o cliente salvar
-- `license.uuid` como identificador público
-- `license.status`
-- `license.expires_at`
-- `license.revoked_at`
-- `license.scopes`
-
-## Fluxo recomendado
-
-1. Criar projeto com `slug` único.
-2. Emitir uma chave para aquele projeto.
-3. O cliente valida antes de iniciar o consumo da API.
-4. Se a licença vencer ou for revogada, o cliente bloqueia o uso.
-5. Auditoria fica registrada no banco.
-
-## Scopes suportados
-
-- `whatsapp:connect`
-- `whatsapp:send`
-- `whatsapp:webhook`
-- `license:read`
-- `license:write`
-
-## Como a WhatsApp API usa a licença
-
-O backend da sua WhatsApp API deve:
-
-1. Receber a chave emitida pela central.
-2. Validar `project_slug`, `domain` e `scope`.
-3. Bloquear conexão, envio ou webhook se a licença falhar.
-4. Revalidar em operações sensíveis e antes de renovar sessão.
-5. Revogar o acesso quando a licença mudar de status.
-
-## Exemplos
-
-Emitir chave:
-
-```bash
-curl -X POST https://licensing.mago-bot.com/v1/keys \
-  -H "Content-Type: application/json" \
-  -H "x-admin-token: SEU_TOKEN_ADMIN" \
-  -d '{
-    "label": "Projeto X",
-    "project_slug": "projeto-x",
-    "scopes": ["whatsapp:connect", "whatsapp:send"],
-    "created_by": "admin"
-  }'
-```
-
-Validar chave:
-
-```bash
-curl -X POST https://licensing.mago-bot.com/v1/keys/validate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "token": "CHAVE_RECEBIDA",
-    "project_slug": "projeto-x",
-    "scope": "whatsapp:connect",
-    "domain": "app.projeto-x.com"
-  }'
-```
-
-Revogar chave:
-
-```bash
-curl -X POST https://licensing.mago-bot.com/v1/keys/123/revoke \
-  -H "x-admin-token: SEU_TOKEN_ADMIN"
-```
+O owner wildcard possui poderes administrativos adicionais e é protegido por MFA Google Authenticator/TOTP. O cliente final percorre o portal customer-scoped e não recebe acesso à Operations Console.
 
 ## Estrutura
 
-- `app/main.py`: aplicação FastAPI
-- `app/models.py`: modelo do banco
-- `app/routes/public.py`: página pública, catálogo e referência
-- `app/routes/product.py`: rotas limpas do produto
-- `app/routes/licenses.py`: compatibilidade legada
-- `app/routes/admin.py`: painel interno
-- `app/routes/health.py`: health check
-- `sql/schema.sql`: base relacional para PostgreSQL
+- `app/main.py`: aplicação FastAPI e metadata OpenAPI.
+- `app/routes/platform_ui.py`: portal do usuário.
+- `app/routes/ops_ui.py`: Operations Console do owner.
+- `app/routes/product_facade.py`: fachada pública do produto.
+- `app/routes/onboarding.py`: onboarding e primeiro valor.
+- `app/routes/channels_public.py`: canais customer-scoped.
+- `app/routes/inbox.py`: inbox e distribuição.
+- `app/providers/meta_cloud.py`: adapter oficial Meta Cloud.
+- `app/providers/evolution.py`: adapter Evolution compatibilidade.
+- `sql/migrations/`: schema versionado e transacional.
 
 ## Deploy
 
-Suba este serviço no aaPanel como Python Project apontando para a porta definida em `LICENSE_PORT`.
+O runtime de produção fica em `/opt/mago-platform` e é servido pelo Docker Compose. O Nginx do aaPanel atua como proxy reverso para a aplicação; `/www/wwwroot/app.mago-bot.com` não é a origem do código privado.
+
+O deploy deve seguir backup, canário, healthchecks, matriz de superfície, validação OpenAPI e rollback de código. Migrations são forward-only e não devem ser revertidas destrutivamente.

@@ -53,7 +53,7 @@ from .routes.channels_public import router as channels_public_router
 from .routes.inbox import router as inbox_router
 
 app = FastAPI(
-    title="Mago Bot Platform",
+    title="API Mago Bot — Produto de API",
     version="1.2.0-alpha.1",
     docs_url=None,
     redoc_url=None,
@@ -69,7 +69,7 @@ def self_hosted_docs() -> HTMLResponse:
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mago Bot Platform - Swagger UI</title>
+  <title>API Mago Bot — Produto de API · Swagger UI</title>
   <link rel="stylesheet" href="/assets/swagger/swagger-ui.css" />
 </head>
 <body>
@@ -86,7 +86,7 @@ app.mount("/assets", StaticFiles(directory=ASSETS_DIR), name="assets")
 
 @app.on_event("startup")
 def startup():
-    lock_path = "/tmp/licensing_central_startup.lock"
+    lock_path = "/tmp/api_mago_bot_startup.lock"
     with open(lock_path, "w") as lockfile:
         fcntl.flock(lockfile, fcntl.LOCK_EX)
         try:

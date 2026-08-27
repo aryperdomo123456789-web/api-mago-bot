@@ -20,33 +20,33 @@ def platform_ui(request: Request) -> HTMLResponse:
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Mago Bot Control Plane — infraestrutura omnichannel de conversas para operações profissionais." />
-  <title>Mago Bot | Control Plane</title>
-  <link rel="stylesheet" href="/assets/platform.css?v=20260826-2" />
+  <meta name="description" content="API Mago Bot — Produto de API multi-tenant para mensageria, automação e operação profissional." />
+  <title>API Mago Bot | Produto de API</title>
+  <link rel="stylesheet" href="/assets/platform.css?v=20260827-api-mago-bot" />
 </head>
 <body>
   <div class="noise" aria-hidden="true"></div>
   <main id="app-shell" class="app-shell">
     <section id="auth-view" class="auth-layout" aria-labelledby="auth-title">
       <div class="auth-story">
-        <div class="brand-lockup"><span class="brand-mark">M</span><span>MAGO BOT</span></div>
+        <div class="brand-lockup"><span class="brand-mark">M</span><span>API MAGO BOT</span></div>
         <div class="story-copy">
-          <p class="eyebrow">CONTROL PLANE / WHATSAPP API</p>
+          <p class="eyebrow">API MAGO BOT / PRODUTO DE API</p>
           <h1>Infraestrutura de conversa para quem cansou de depender de gambiarra.</h1>
-          <p class="story-text">Orquestre projetos, providers, chaves, quotas e webhooks num único cockpit. Transparência no provider. Controle no tenant. Operação pronta para crescer.</p>
+          <p class="story-text">Orquestre projetos, providers, chaves, quotas, webhooks e conversas num único cockpit. Meta Cloud oficial ou Evolution compatibilidade, sempre com transparência, isolamento e rastreabilidade.</p>
         </div>
         <div class="story-grid">
-          <div><strong>01</strong><span>API própria</span></div>
-          <div><strong>02</strong><span>Meta Cloud ready</span></div>
-          <div><strong>03</strong><span>Tenant isolado</span></div>
+          <div><strong>01</strong><span>API multi-tenant</span></div>
+          <div><strong>02</strong><span>Meta Cloud oficial</span></div>
+          <div><strong>03</strong><span>Tenant seguro</span></div>
         </div>
       </div>
       <div class="auth-card-wrap">
         <div class="auth-card">
           <div class="auth-heading">
-            <p class="eyebrow">ACESSO OPERACIONAL</p>
-            <h2 id="auth-title">Entre no control plane.</h2>
-            <p id="auth-copy">A base é profissional. O acesso também precisa ser.</p>
+            <p class="eyebrow">API MAGO BOT / ACESSO SEGURO</p>
+            <h2 id="auth-title">Entre na API Mago Bot.</h2>
+            <p id="auth-copy">Seu workspace, seus canais e sua operação em um único produto de API.</p>
           </div>
           <div id="auth-alert" class="alert" role="alert" hidden></div>
           <form id="login-form" class="form-stack">
@@ -84,13 +84,16 @@ def platform_ui(request: Request) -> HTMLResponse:
       <button id="mobile-nav-backdrop" class="mobile-nav-backdrop" type="button" aria-label="Fechar menu principal"></button>
       <aside id="main-sidebar" class="sidebar" aria-label="Navegação principal">
         <div class="sidebar-head">
-          <div class="brand-lockup"><span class="brand-mark">M</span><span>MAGO BOT</span></div>
+          <div class="brand-lockup"><span class="brand-mark">M</span><span>API MAGO BOT</span></div>
           <button id="sidebar-close" class="sidebar-close" type="button" aria-label="Fechar menu principal">×</button>
         </div>
         <div class="side-label">OPERAÇÃO</div>
         <nav class="side-nav" aria-label="Navegação principal">
           <button class="side-link active" data-section="overview">Visão geral</button>
+          <button class="side-link" data-section="onboarding">Primeiro valor</button>
           <button class="side-link" data-section="projects">Projetos & providers</button>
+          <button class="side-link" data-section="channels">Canais</button>
+          <button class="side-link" data-section="inbox">Inbox</button>
           <button class="side-link" data-section="conversations">Conversas</button>
           <button class="side-link" data-section="keys">API keys</button>
           <button class="side-link" data-section="webhooks">Webhooks</button>
@@ -101,7 +104,7 @@ def platform_ui(request: Request) -> HTMLResponse:
       </aside>
       <div class="dashboard-main">
         <header class="topbar">
-          <div class="topbar-title"><button id="mobile-menu-toggle" class="mobile-menu-toggle" type="button" aria-controls="main-sidebar" aria-expanded="false" aria-label="Abrir menu principal">☰</button><div><p class="eyebrow">MAGO BOT / OPERAÇÃO</p><h2 id="dashboard-title">Visão geral</h2></div></div>
+          <div class="topbar-title"><button id="mobile-menu-toggle" class="mobile-menu-toggle" type="button" aria-controls="main-sidebar" aria-expanded="false" aria-label="Abrir menu principal">☰</button><div><p class="eyebrow">API MAGO BOT / PRODUTO DE API</p><h2 id="dashboard-title">Visão geral</h2></div></div>
           <div class="topbar-actions"><span id="user-chip" class="user-chip"></span><button id="logout-button" class="button button-ghost small">Sair</button></div>
         </header>
         <div id="dashboard-alert" class="alert" role="alert" hidden></div>
@@ -110,7 +113,7 @@ def platform_ui(request: Request) -> HTMLResponse:
     </section>
   </main>
   <script src="/assets/platform-diagnostics.js" defer></script>
-  <script src="/assets/platform-app.js?v=20260826-3" defer></script>
+  <script src="/assets/platform-app.js?v=20260827-api-mago-bot" defer></script>
 </body>
 </html>"""
     return HTMLResponse(html, headers={"Cache-Control": "no-store"})

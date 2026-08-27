@@ -1,13 +1,13 @@
 # E-mail transacional — Resend Free
 
-**Produto:** Mago Bot Platform
+**Produto:** API Mago Bot — Produto de API
 **Estado:** implementado e validado no canário em dry-run
 **Data:** 26 de agosto de 2026
 **Autor:** Manus AI
 
 ## Objetivo
 
-O Mago Bot envia e-mails transacionais de onboarding e autenticação usando identidades do domínio verificado, sem criar uma caixa de entrada. Os remetentes podem ser `contato@app.mago-bot.com`, `suporte@app.mago-bot.com`, `vendas@app.mago-bot.com` e outros aliases permitidos. O conteúdo informa que a mensagem é automática e não deve ser respondida.
+A API Mago Bot envia e-mails transacionais de onboarding e autenticação usando identidades do domínio verificado, sem criar uma caixa de entrada. Os remetentes podem ser `contato@app.mago-bot.com`, `suporte@app.mago-bot.com`, `vendas@app.mago-bot.com` e outros aliases permitidos. O conteúdo informa que a mensagem é automática e não deve ser respondida.
 
 A primeira versão usa o Resend Free atrás de um adapter próprio. A aplicação não chama o provider durante o request do usuário: a rota grava uma entrega pendente, e um worker assíncrono executa o envio, aplica retry e atualiza o estado. A integração pode ser trocada por Postmark, SES ou SMTP sem reescrever os fluxos de signup e autenticação.
 

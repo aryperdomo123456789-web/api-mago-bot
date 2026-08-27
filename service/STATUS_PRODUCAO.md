@@ -1,10 +1,12 @@
-# Status de Produção - WhatsApp API Licensing
+# Status de Produção — API Mago Bot (snapshot histórico)
 
-Data de referencia: 2026-08-14
+Data de referência: 2026-08-14
+
+> **Nota de identidade:** este documento preserva o retrato histórico da fundação de licenças. O produto atual é a **API Mago Bot — Produto de API**; licenças são uma camada legada e não substituem API keys customer/project-scoped.
 
 ## Resumo executivo
 
-Este projeto ja funciona como uma central de licencas para um produto de WhatsApp API.
+Este snapshot registra a fase em que o projeto funcionava principalmente como central de licenças para uma API de WhatsApp. A evolução atual é a API Mago Bot, com control plane multi-tenant, providers separados, canais, conversas, webhooks e inbox.
 Ele emite, valida, revoga e audita chaves por projeto, dominio e scope.
 
 Nota geral de prontidao para producao: **6.8/10**

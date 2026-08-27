@@ -36,7 +36,7 @@ PUBLIC_APP_JS = r'''(() => {
 })();'''
 
 API_REFERENCE = {
-    "service": "WhatsApp API Licensing",
+    "service": "API Mago Bot — Produto de API",
     "base_url": settings.public_base_url,
     "docs": {
         "openapi": "/docs",
@@ -166,7 +166,7 @@ def public_home():
 def public_info():
     return {
         "service": settings.app_name,
-        "product_name": "WhatsApp API Licensing",
+        "product_name": "API Mago Bot — Produto de API",
         "status": "ok",
         "version": "0.3.0",
         "base_url": settings.public_base_url,
@@ -196,7 +196,7 @@ def public_info():
             "license:write",
         ],
         "product": {
-            "name": "WhatsApp API Licensing",
-            "positioning": "license platform for a WhatsApp API product",
+            "product_name": "API Mago Bot — Produto de API",
+            "positioning": "API multi-tenant para mensageria, automação e operação de canais com providers separados",
         },
     }

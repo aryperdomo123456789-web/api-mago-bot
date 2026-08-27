@@ -1,4 +1,4 @@
-# Plano de deploy canário — Mago Bot Platform
+# Plano de deploy canário — API Mago Bot
 
 ## Princípio
 

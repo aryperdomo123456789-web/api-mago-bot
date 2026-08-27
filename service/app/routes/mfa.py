@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import base64
+import io
+
+import qrcode
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -31,12 +35,23 @@ def get_db():
         db.close()
 
 
+def _user(request: Request, db: Session = Depends(get_db)) -> PanelUser:
+    return get_current_platform_user(request, db)
+
+
 def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def _user(request: Request, db: Session = Depends(get_db)) -> PanelUser:
-    return get_current_platform_user(request, db)
+def _qr_data_url(value: str) -> str:
+    qr = qrcode.QRCode(version=None, error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=8, border=4)
+    qr.add_data(value)
+    qr.make(fit=True)
+    image = qr.make_image(fill_color="#06111d", back_color="white").convert("RGB")
+    output = io.BytesIO()
+    image.save(output, format="PNG", optimize=True)
+    encoded = base64.b64encode(output.getvalue()).decode("ascii")
+    return "data:image/png;base64," + encoded
 
 
 def _validate_factor(user: PanelUser, code: str) -> tuple[bool, int | None, list[str] | None]:
@@ -68,13 +83,14 @@ def enroll(request: Request, db: Session = Depends(get_db)):
     user.mfa_last_used_counter = None
     user.mfa_enrolled_at = None
     db.commit()
+    uri = otpauth_uri(secret, user.email)
     return {
         "ok": True,
         "status": "pending_confirmation",
-        "secret": secret,
-        "otpauth_uri": otpauth_uri(secret, user.email),
+        "otpauth_uri": uri,
+        "qr_data_url": _qr_data_url(uri),
         "recovery_codes": recovery_codes,
-        "warning": "secret and recovery codes are shown once; store them in an approved password manager",
+        "warning": "QR, URI and recovery codes are shown once; store recovery codes in an approved password manager",
     }
 
 
