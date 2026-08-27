@@ -1,15 +1,17 @@
-# Operations Console — Mago Bot
+# API Mago Bot — Operations Console
+
+> Este manual descreve somente a área owner do **produto API Mago Bot**. O Mago Bot CRM é outro produto, no repositório `project-hello`, com owner em `mago-bot.com/owner/login` e usuário em `mago-bot.com`.
 
 ## Estado da entrega
 
-A Operations Console é a superfície administrativa do Mago Bot e deve ser publicada no domínio `evo-api.mago-bot.com`. O portal cliente permanece em `app.mago-bot.com/admin`. A implementação atual foi validada em canário isolado e não deve ser promovida para produção sem um gate explícito, backup recente e rollback confirmado.
+A Operations Console é a superfície administrativa do **API Mago Bot** e deve ser publicada em `https://evo-api.mago-bot.com/ops`. O portal de usuário permanece em `https://app.mago-bot.com/admin`; a documentação fica em `https://app.mago-bot.com/docs`. A implementação atual foi validada em canário isolado e não deve ser promovida para produção sem um gate explícito, backup recente e rollback confirmado.
 
 ## Superfícies
 
 | Superfície | Domínio | Função | Política |
 |---|---|---|---|
 | Operations Console | `evo-api.mago-bot.com/ops` | Administração, operações, filas, tenants e auditoria | `owner`, `platform_superadmin`, `platform_operator`, `platform_support` |
-| Portal cliente | `app.mago-bot.com/admin` | Projetos, conversas, chaves, webhooks e consumo do tenant | Papéis `tenant_*` e `customer_common` |
+| Portal usuário | `app.mago-bot.com/admin` | Projetos, conversas, chaves, webhooks e consumo do tenant | Papéis `tenant_*` e `customer_common` |
 | Evolution provider | Rotas provider do `evo-api` | Adapter de compatibilidade para WhatsApp | Nunca é apresentado como a API própria |
 | Manager Evolution | `/manager` | Interface interna da Evolution | Bloqueada publicamente |
 
@@ -17,7 +19,7 @@ A autorização usa o hostname efetivo do request no backend. Nenhum campo envia
 
 ## Abas administrativas
 
-A central possui quinze abas: Overview, Proprietário, Usuários, Clientes/Tenants, Projetos, Licenças e API Keys, Planos e Trials, Parceiros, WhatsApp/Meta Cloud, Evolution API, Estatísticas, Uso e quotas, Filas e falhas, Alertas e Auditoria.
+A central possui quinze abas: Overview, Proprietário, Usuários, Clientes/Tenants, Projetos, Licenças e API Keys, Planos e Trials, Parceiros, WhatsApp/Meta Cloud, Evolution API, Estatísticas, Uso e quotas, Filas e falhas, Alertas e Auditoria. Ela é o cockpit de governança da **API Mago Bot**, não o painel de atendimento do CRM.
 
 As mutações usam endpoints modernos sob `/v1/ops` e registram `AuditEvent` append-only com ator, request ID, IP, user-agent, recurso, resultado e metadados sanitizados. Tokens de licença são entregues uma única vez; hashes e segredos não são serializados para o navegador.
 

@@ -1,6 +1,7 @@
 # API Mago Bot — Produto de API
 
-Serviço FastAPI do **API Mago Bot**, um control plane multi-tenant para mensageria, canais, conversas, automação, webhooks e operação profissional.
+
+Serviço FastAPI do **API Mago Bot**, um control plane multi-tenant para mensageria, canais, conversas, automação, webhooks e operação profissional. Este serviço não é o **Mago Bot CRM** do repositório `project-hello`.
 
 ## Posicionamento
 
@@ -8,9 +9,11 @@ O Mago Bot é a camada de produto e governança. **Meta Cloud** é o provider of
 
 ## Superfícies
 
-- `https://evo-api.mago-bot.com`: Operations Console restrita para owner e papéis operacionais.
-- `https://app.mago-bot.com`: portal customer-scoped para organizações, projetos, canais, inbox e API keys.
-- `https://app.mago-bot.com/docs`: documentação OpenAPI.
+- `https://evo-api.mago-bot.com/ops`: Operations Console restrita para owner e papéis operacionais.
+- `https://app.mago-bot.com/admin`: portal customer-scoped para organizações, projetos, canais, inbox e API keys.
+- `https://app.mago-bot.com/docs`: documentação OpenAPI do produto de API.
+- `https://mago-bot.com/owner/login`: owner do produto separado Mago Bot CRM; não pertence a este serviço.
+- `https://mago-bot.com`: usuário do produto separado Mago Bot CRM; não pertence a este serviço.
 
 ## Contratos principais
 
@@ -53,7 +56,7 @@ O owner wildcard possui poderes administrativos adicionais e é protegido por MF
 
 ## Estrutura
 
-- `app/main.py`: aplicação FastAPI e metadata OpenAPI.
+- `app/main.py`: aplicação FastAPI e metadata OpenAPI da API Mago Bot.
 - `app/routes/platform_ui.py`: portal do usuário.
 - `app/routes/ops_ui.py`: Operations Console do owner.
 - `app/routes/product_facade.py`: fachada pública do produto.

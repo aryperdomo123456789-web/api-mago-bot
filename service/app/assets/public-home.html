@@ -76,9 +76,10 @@
     button:focus-visible, a:focus-visible { outline: 3px solid var(--lime); outline-offset: 4px; }
     .wrap { width: min(100% - 40px, var(--max)); margin-inline: auto; }
     .nav {
-      position: sticky;
-      top: 0;
-      z-index: 30;
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 50;
+      width: 100%;
       border-bottom: 1px solid rgba(226,255,231,.1);
       background: rgba(6,22,23,.82);
       backdrop-filter: blur(20px);
@@ -112,6 +113,7 @@
     h2 { margin-bottom: 16px; font-size: clamp(2.2rem, 4.4vw, 4.2rem); line-height: .98; }
     h3 { margin-bottom: 10px; font-size: 1.24rem; line-height: 1.05; }
     .lede { max-width: 650px; margin-bottom: 0; color: var(--muted); font-size: clamp(1.02rem, 1.8vw, 1.18rem); line-height: 1.7; }
+    main { padding-top: 76px; }
     .hero { padding: 82px 0 54px; }
     .hero-grid { display: grid; grid-template-columns: minmax(0, .91fr) minmax(0, 1.09fr); align-items: center; gap: clamp(32px, 6vw, 84px); }
     .hero-copy { position: relative; z-index: 1; }
@@ -239,6 +241,7 @@
     @media (max-width: 780px) {
       .wrap { width: min(100% - 32px, var(--max)); }
       .nav-inner { min-height: 68px; }
+      main { padding-top: 68px; }
       .nav-toggle { display: inline-grid; place-items: center; }
       .nav-links { position: absolute; top: calc(100% + 1px); right: 16px; left: 16px; display: none; align-items: stretch; flex-direction: column; gap: 0; border: 1px solid var(--line); border-radius: 16px; padding: 8px; background: rgba(6,22,23,.98); box-shadow: var(--shadow); }
       .nav-links[data-open="true"] { display: flex; }

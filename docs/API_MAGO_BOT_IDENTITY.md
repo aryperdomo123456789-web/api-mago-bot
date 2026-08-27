@@ -1,7 +1,7 @@
 # API Mago Bot — Identidade, superfícies e arquitetura
 
 **Produto:** API Mago Bot — Produto de API
-**Repositório:** `aryperdomo123456789-web/api-mago-bot`
+**Repositório:** [`aryperdomo123456789-web/appapiwppmago`](https://github.com/aryperdomo123456789-web/appapiwppmago)
 **Atualizado:** 27 de agosto de 2026
 **Autor:** Manus AI
 
@@ -11,8 +11,8 @@
 
 | Produto | Repositório | Área de dono | Área de usuário | Escopo desta documentação |
 |---|---|---|---|---|
-| **API Mago Bot — Produto de API** | `appapiwppmago` | https://evo-api.mago-bot.com | https://app.mago-bot.com | **Sim** |
-| **Mago Bot CRM** | `project-hello` | https://mago-bot.com/owner/login | https://mago-bot.com | **Não** |
+| **API Mago Bot — Produto de API** | [`appapiwppmago`](https://github.com/aryperdomo123456789-web/appapiwppmago) | [`https://evo-api.mago-bot.com/ops`](https://evo-api.mago-bot.com/ops) | [`https://app.mago-bot.com/admin`](https://app.mago-bot.com/admin) | **Sim** |
+| **Mago Bot CRM** | [`project-hello`](https://github.com/aryperdomo123456789-web/project-hello) | [`https://mago-bot.com/owner/login`](https://mago-bot.com/owner/login) | [`https://mago-bot.com`](https://mago-bot.com) | **Não** |
 
 O CRM não deve ser usado como origem de telas, sessão, banco, workers ou provider da API. Os dois produtos podem compartilhar marca comercial, mas possuem responsabilidades, runtimes e ciclos de deploy diferentes.
 
@@ -26,9 +26,9 @@ A API Mago Bot não é a API oficial da Meta. **Meta Cloud** é o provider ofici
 
 | Superfície | Host | Público principal | Responsabilidade |
 |---|---|---|---|
-| Operations Console | `evo-api.mago-bot.com` | Owner, superadmin, operator e suporte permitido | Provisionamento, RBAC, MFA, providers, auditoria e operação |
-| Portal customer-scoped | `app.mago-bot.com` | Usuários com membership | Organização, projeto, onboarding, canais, inbox, API keys e webhooks |
-| API de produto | `app.mago-bot.com/v1/*` | Integradores com sessão ou API key | Contrato de integração e recursos tenant-scoped |
+| Operations Console | [`evo-api.mago-bot.com/ops`](https://evo-api.mago-bot.com/ops) | Owner, superadmin, operator e suporte permitido | Provisionamento, RBAC, MFA, providers, auditoria e operação |
+| Portal customer-scoped | [`app.mago-bot.com/admin`](https://app.mago-bot.com/admin) | Usuários com membership | Organização, projeto, onboarding, canais, inbox, API keys e webhooks |
+| API de produto | [`app.mago-bot.com/v1/*`](https://app.mago-bot.com/docs) | Integradores com sessão ou API key | Contrato de integração e recursos tenant-scoped |
 | Evolution provider | Interno | Apenas adapters do servidor | Sessões, QR/pairing, health e eventos de compatibilidade |
 | Meta Cloud provider | Server-side | Adapter oficial configurado | WABA, Phone Number ID, templates e webhooks Meta |
 | Manager bruto Evolution | Não público | Nenhum cliente | Bloqueado externamente; não faz parte do produto |
@@ -81,5 +81,5 @@ O produto está apto para piloto controlado quando um tenant pode ser provisiona
 
 [1]: https://evo-api.mago-bot.com "API Mago Bot — Operations Console"
 [2]: https://app.mago-bot.com "API Mago Bot — Portal customer-scoped"
-[3]: https://github.com/aryperdomo123456789-web/api-mago-bot "API Mago Bot — Repositório"
+[3]: https://github.com/aryperdomo123456789-web/appapiwppmago "API Mago Bot — Repositório"
 [4]: https://github.com/aryperdomo123456789-web/project-hello "Mago Bot CRM — Repositório separado"

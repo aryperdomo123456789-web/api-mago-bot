@@ -1,5 +1,8 @@
 # API Mago Bot — Produto de API v1
 
+> Este manual pertence ao produto **API Mago Bot**. O **Mago Bot CRM** está no repositório `project-hello` e possui runtime, domínio, sessão e responsabilidades separados.
+
+**Produto:** API Mago Bot — Produto de API
 **Status:** foundation implementada em `feat/platform-api-v1`  
 **Objetivo:** fornecer a API Mago Bot para operações de mensageria e WhatsApp, com provider oficial Meta Cloud e adapter de compatibilidade Evolution explicitamente separado.
 
@@ -7,7 +10,7 @@
 
 ## Primeiro fluxo de produção
 
-O operador aplica `service/sql/migrations/0001_platform_foundation.sql` no PostgreSQL de staging, injeta os segredos server-side de `service/deploy/service.env.example`, inicia a aplicação e o worker de webhooks, cria ou confirma o tenant, cria um projeto, vincula o Phone Number ID Meta como recurso e emite uma API key com scopes mínimos.
+O operador aplica `service/sql/migrations/0001_platform_foundation.sql` no PostgreSQL de staging, injeta os segredos server-side de `service/deploy/service.env.example`, inicia a aplicação e o worker de webhooks, cria ou confirma o tenant, cria um projeto, vincula o Phone Number ID Meta como recurso e emite uma API key com scopes mínimos. O usuário acessa `https://app.mago-bot.com/admin`; o owner acessa `https://evo-api.mago-bot.com/ops`.
 
 A Meta orienta criar um app WhatsApp, conectar um WABA, guardar o WABA ID e o Phone Number ID, usar um System User com token permanente e configurar um endpoint de webhook próprio para produção.[1] A API Mago Bot guarda os tokens apenas no servidor e recebe callbacks em `/v1/webhooks/meta`.
 

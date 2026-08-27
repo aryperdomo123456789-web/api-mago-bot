@@ -6,9 +6,21 @@ A **API Mago Bot** é um control plane multi-tenant para mensageria, automação
 
 | Superfície | URL | Responsabilidade |
 |---|---|---|
-| Operations Console / owner | https://evo-api.mago-bot.com | Administração, RBAC owner, provisionamento, MFA, providers e auditoria |
-| Portal customer-scoped / usuário | https://app.mago-bot.com | Organização, projeto, onboarding, canais, inbox, API keys e webhooks |
+| Operations Console / owner | https://evo-api.mago-bot.com/ops | Administração, RBAC owner, provisionamento, MFA, providers e auditoria |
+| Portal customer-scoped / usuário | https://app.mago-bot.com/admin | Organização, projeto, onboarding, canais, inbox, API keys e webhooks |
 | Documentação | https://app.mago-bot.com/docs | OpenAPI e referência pública do contrato |
+| Health | https://app.mago-bot.com/health | Liveness/readiness e disponibilidade operacional |
+
+## Fronteira com o Mago Bot CRM
+
+Este repositório é o **API Mago Bot — Produto de API**. O CRM é outro produto, no repositório [`project-hello`](https://github.com/aryperdomo123456789-web/project-hello), com responsabilidades e deploy separados.
+
+| Produto | Repositório | Área de dono | Área de usuário |
+|---|---|---|---|
+| **API Mago Bot** | [`appapiwppmago`](https://github.com/aryperdomo123456789-web/appapiwppmago) | [`evo-api.mago-bot.com/ops`](https://evo-api.mago-bot.com/ops) | [`app.mago-bot.com/admin`](https://app.mago-bot.com/admin) |
+| **Mago Bot CRM** | [`project-hello`](https://github.com/aryperdomo123456789-web/project-hello) | [`mago-bot.com/owner/login`](https://mago-bot.com/owner/login) | [`mago-bot.com`](https://mago-bot.com) |
+
+A API governa tenants, projetos, licenças, providers, canais, chaves, webhooks, quotas e eventos. O CRM entrega a experiência final de atendimento: inbox, contatos, filas, SLA, fluxos, tickets, IA, RAG, QA, campanhas e relatórios. Não misturar sessões, bancos, workers, identidade visual ou contratos dos dois produtos.
 
 ## Providers
 

@@ -8,7 +8,10 @@
 
 ## 1. O produto
 
-A API Mago Bot organiza a operação em **organização**, **projeto**, **provider**, **canal**, **contato**, **conversa**, **mensagem**, **fila** e **webhook**. O control plane concentra autenticação, autorização, idempotência, quotas, auditoria, tracing, retries, circuit breaker e normalização de erros. O cliente integra uma superfície estável da API Mago Bot sem acessar diretamente a Evolution API, credenciais globais ou bancos internos.
+A API Mago Bot organiza a operação em **organização**, **projeto**, **provider**, **canal**, **contato**, **conversa**, **mensagem**, **fila** e **webhook**.
+
+O **Mago Bot CRM** não é uma rota desta API: ele é o produto final de atendimento no repositório `project-hello`, com owner em `https://mago-bot.com/owner/login` e usuário em `https://mago-bot.com`. A API Mago Bot fornece contratos e infraestrutura; o CRM fornece experiência de operação.
+O control plane concentra autenticação, autorização, idempotência, quotas, auditoria, tracing, retries, circuit breaker e normalização de erros. O cliente integra uma superfície estável da API Mago Bot sem acessar diretamente a Evolution API, credenciais globais ou bancos internos.
 
 O produto foi desenhado para que a primeira ativação seja operacionalmente guiada: criar um workspace, escolher um provider, conectar o canal, configurar a fila, receber a primeira conversa e responder com rastreabilidade. A meta de paridade é de **experiência operacional**, e não de equivalência regulatória, de transporte ou de SLA com a Meta.
 
@@ -29,8 +32,8 @@ Usuários comuns trabalham apenas com memberships explícitos. `tenant_owner` ad
 
 | Superfície | Host | Acesso principal |
 |---|---|---|
-| Portal cliente e API de produto | `app.mago-bot.com` | Sessão ou API key com membership/scopes |
-| Operations Console e lifecycle | `evo-api.mago-bot.com` | Owner, superadmin, operator e suporte conforme a ação |
+| Portal cliente e API de produto | [`app.mago-bot.com/admin`](https://app.mago-bot.com/admin) / [`app.mago-bot.com/docs`](https://app.mago-bot.com/docs) | Sessão ou API key com membership/scopes |
+| Operations Console e lifecycle | [`evo-api.mago-bot.com/ops`](https://evo-api.mago-bot.com/ops) | Owner, superadmin, operator e suporte conforme a ação |
 | Manager bruto do provider | Não público | Bloqueado externamente; não faz parte do produto |
 
 IDs públicos usam UUID. IDs sequenciais internos não fazem parte do contrato público. Um recurso de outro tenant deve retornar 403 ou 404 sem revelar existência, payload ou credencial.

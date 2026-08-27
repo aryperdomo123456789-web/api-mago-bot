@@ -123,7 +123,7 @@ def startup():
                         [
                             PlanCatalog(
                                 slug="start",
-                                name="PD Start",
+                                name="API Start",
                                 subtitle="Entrada leve para testar e validar o produto",
                                 description="Plano de entrada para experimentação, onboarding e primeiros clientes.",
                                 price_cents=4990,
@@ -138,7 +138,7 @@ def startup():
                             ),
                             PlanCatalog(
                                 slug="pro",
-                                name="PD Pro",
+                                name="API Pro",
                                 subtitle="Operação séria com múltiplos clientes",
                                 description="Camada profissional para assinantes com mais volume e automação.",
                                 price_cents=9990,
@@ -153,7 +153,7 @@ def startup():
                             ),
                             PlanCatalog(
                                 slug="elite",
-                                name="PD Elite",
+                                name="API Enterprise",
                                 subtitle="Para parceiros e operação grande",
                                 description="Plano avançado com limites personalizados, suporte e SLA.",
                                 price_cents=None,
