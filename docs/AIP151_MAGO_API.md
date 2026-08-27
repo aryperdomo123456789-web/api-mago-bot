@@ -18,16 +18,16 @@ A recomendação é adotar AIP-151 de forma incremental, por HTTP/JSON e sem ree
 
 | Referência | Regra principal | Aplicação no Mago |
 |---|---|---|
-| [AIP-151 — Long-running operations][aip-151] | Método demorado retorna `Operation`; deve haver metadata, response type, erro terminal e serviço uniforme de Operations | Criar Operations REST/JSON para envio assíncrico, reconciliação e ações longas |
-| [AIP-152 — Jobs][aip-152] | Job é recurso configurável e repetível; `Run` retorna Operation | Reservar para campanhas, flows agendados, importações e syncs |
-| [AIP-155 — Request identification][aip-155] | `request_id` opcional garante idempotência e retry seguro; UUID é recomendado | Unificar `Idempotency-Key`, request hash, tenant, projeto e endpoint |
-| [AIP-193 — Errors][aip-193] | Erros usam status canônico, `ErrorInfo`, reason/domain e detalhes acionáveis | Evoluir envelope atual sem quebrar `error.code/message/request_id` |
-| [AIP-194 — Automatic retry configuration][aip-194] | Retry somente quando repetir é seguro; `UNAVAILABLE` é retryable, quota/argumento não | Manter circuit breaker e classificar retries por provider e efeito externo |
-| [AIP-203 — Field behavior][aip-203] | Requests devem declarar required/optional/output-only; documentação não substitui validação | Melhorar OpenAPI de operations, channels, messages e webhooks |
-| [AIP-211 — Authorization checks][aip-211] | Autorizar antes de validar e não vazar existência de recursos | Autorizar por tenant/projeto/API key antes de acessar Operation |
-| [AIP-136 — Custom methods][aip-136] | Ações mutáveis usam POST e URI `:verb`, com nomes claros | Usar `:run`, `:cancel`, `:replay` e `:retry` quando realmente necessários |
-| [AIP-142 — Time and duration][aip-142] | Timestamps absolutos e durações devem ter semântica consistente | Novos recursos usam `*_time`, `*_seconds`/Duration documentado e UTC |
-| [AIP-180 — Backwards compatibility][aip-180] | Clientes existentes não podem quebrar em mudança minor/patch | Introduzir modo assíncrono de forma aditiva e negociável |
+| [AIP-151 — Long-running operations][1] | Método demorado retorna `Operation`; deve haver metadata, response type, erro terminal e serviço uniforme de Operations | Criar Operations REST/JSON para envio assíncrico, reconciliação e ações longas |
+| [AIP-152 — Jobs][2] | Job é recurso configurável e repetível; `Run` retorna Operation | Reservar para campanhas, flows agendados, importações e syncs |
+| [AIP-155 — Request identification][3] | `request_id` opcional garante idempotência e retry seguro; UUID é recomendado | Unificar `Idempotency-Key`, request hash, tenant, projeto e endpoint |
+| [AIP-193 — Errors][4] | Erros usam status canônico, `ErrorInfo`, reason/domain e detalhes acionáveis | Evoluir envelope atual sem quebrar `error.code/message/request_id` |
+| [AIP-194 — Automatic retry configuration][5] | Retry somente quando repetir é seguro; `UNAVAILABLE` é retryable, quota/argumento não | Manter circuit breaker e classificar retries por provider e efeito externo |
+| [AIP-203 — Field behavior][6] | Requests devem declarar required/optional/output-only; documentação não substitui validação | Melhorar OpenAPI de operations, channels, messages e webhooks |
+| [AIP-211 — Authorization checks][7] | Autorizar antes de validar e não vazar existência de recursos | Autorizar por tenant/projeto/API key antes de acessar Operation |
+| [AIP-136 — Custom methods][8] | Ações mutáveis usam POST e URI `:verb`, com nomes claros | Usar `:run`, `:cancel`, `:replay` e `:retry` quando realmente necessários |
+| [AIP-142 — Time and duration][9] | Timestamps absolutos e durações devem ter semântica consistente | Novos recursos usam `*_time`, `*_seconds`/Duration documentado e UTC |
+| [AIP-180 — Backwards compatibility][10] | Clientes existentes não podem quebrar em mudança minor/patch | Introduzir modo assíncrono de forma aditiva e negociável |
 
 ## 3. Estado real já existente no Mago Bot
 
@@ -287,13 +287,13 @@ A primeira implementação deve ser pequena, aditiva e observável. Depois de pr
 
 ## Referências
 
-[aip-151]: https://google.aip.dev/151
-[aip-152]: https://google.aip.dev/152
-[aip-155]: https://google.aip.dev/155
-[aip-193]: https://google.aip.dev/193
-[aip-194]: https://google.aip.dev/194
-[aip-203]: https://google.aip.dev/203
-[aip-211]: https://google.aip.dev/211
-[aip-136]: https://google.aip.dev/136
-[aip-142]: https://google.aip.dev/142
-[aip-180]: https://google.aip.dev/180
+[1]: https://google.aip.dev/151 "AIP-151: Long-running operations"
+[2]: https://google.aip.dev/152 "AIP-152: Jobs"
+[3]: https://google.aip.dev/155 "AIP-155: Request identification"
+[4]: https://google.aip.dev/193 "AIP-193: Errors"
+[5]: https://google.aip.dev/194 "AIP-194: Automatic retry configuration"
+[6]: https://google.aip.dev/203 "AIP-203: Field behavior documentation"
+[7]: https://google.aip.dev/211 "AIP-211: Authorization checks"
+[8]: https://google.aip.dev/136 "AIP-136: Custom methods"
+[9]: https://google.aip.dev/142 "AIP-142: Time and duration"
+[10]: https://google.aip.dev/180 "AIP-180: Backwards compatibility"
