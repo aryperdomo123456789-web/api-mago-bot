@@ -80,13 +80,7 @@ def _token_from_headers(x_api_key: str | None, authorization: str | None) -> str
     return None
 
 
-def get_service_api_key(
-    db: Session = Depends(_get_db),
-    x_api_key: str | None = Security(api_key_header),
-    bearer: HTTPAuthorizationCredentials | None = Security(bearer_scheme),
-) -> ServiceApiKey:
-    authorization = f"{bearer.scheme} {bearer.credentials}" if bearer else None
-    raw_token = _token_from_headers(x_api_key, authorization)
+def _resolve_service_api_key(db: Session, raw_token: str | None) -> ServiceApiKey:
     if not raw_token or len(raw_token) < 32:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="api key required")
     key = db.scalar(select(ServiceApiKey).where(ServiceApiKey.token_hash == hashlib.sha256(raw_token.encode("utf-8")).hexdigest()))
@@ -96,6 +90,23 @@ def get_service_api_key(
     key.last_used_at = now
     db.commit()
     return key
+
+
+def get_service_api_key(
+    db: Session = Depends(_get_db),
+    x_api_key: str | None = Security(api_key_header),
+    bearer: HTTPAuthorizationCredentials | None = Security(bearer_scheme),
+) -> ServiceApiKey:
+    authorization = f"{bearer.scheme} {bearer.credentials}" if bearer else None
+    return _resolve_service_api_key(db, _token_from_headers(x_api_key, authorization))
+
+
+def get_service_api_key_x_api_key(
+    db: Session = Depends(_get_db),
+    x_api_key: str | None = Security(api_key_header),
+) -> ServiceApiKey:
+    """Strict M2M dependency: credentials must arrive in X-API-Key, never a cookie."""
+    return _resolve_service_api_key(db, x_api_key.strip() if x_api_key else None)
 
 
 def issue_service_api_key() -> tuple[str, str]:

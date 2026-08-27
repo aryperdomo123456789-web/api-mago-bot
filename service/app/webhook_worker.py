@@ -14,6 +14,7 @@ from sqlalchemy import select
 from .db import SessionLocal
 from .platform_crypto import decrypt_secret
 from .platform_models import WebhookDelivery, WebhookEvent, WebhookSubscription
+from .platform_webhook_events import canonical_event_type
 from .platform_ssrf import UnsafeWebhookEndpoint, validate_webhook_endpoint
 
 MAX_ATTEMPTS = int(os.getenv("WEBHOOK_MAX_ATTEMPTS", "10"))
@@ -27,6 +28,27 @@ def _now() -> datetime:
 def _signature(secret: str, body: bytes) -> str:
     digest = hmac.new(secret.encode("utf-8"), body, hashlib.sha256).hexdigest()
     return f"sha256={digest}"
+
+
+def build_signed_delivery(event: WebhookEvent, delivery: WebhookDelivery, secret: str) -> tuple[bytes, dict[str, str]]:
+    event_type = canonical_event_type(event.event_type, event.payload)
+    body_data = {
+        "id": str(event.event_uuid),
+        "type": event_type,
+        "provider": event.provider_type,
+        "created_at": event.received_at.isoformat() if event.received_at else None,
+        "data": event.payload,
+    }
+    body = json.dumps(body_data, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "MagoBot-Webhooks/1.0",
+        "X-Mago-Signature": _signature(secret, body),
+        "X-Mago-Event-ID": str(event.event_uuid),
+        "X-Mago-Delivery-ID": str(delivery.delivery_uuid),
+        "X-Mago-Event-Type": event_type,
+    }
+    return body, headers
 
 
 async def deliver_one() -> bool:
@@ -52,28 +74,14 @@ async def deliver_one() -> bool:
             delivery.status = "cancelled"
             db.commit()
             return True
-        body_data = {
-            "id": str(event.event_uuid),
-            "type": event.event_type,
-            "provider": event.provider_type,
-            "created_at": event.received_at.isoformat() if event.received_at else None,
-            "data": event.payload,
-        }
-        body = json.dumps(body_data, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+        body, signed_headers = build_signed_delivery(event, delivery, decrypt_secret(subscription.secret_encrypted))
         try:
             endpoint_url = await asyncio.to_thread(validate_webhook_endpoint, subscription.endpoint_url)
-            secret = decrypt_secret(subscription.secret_encrypted)
             async with httpx.AsyncClient(timeout=10, follow_redirects=False) as client:
                 response = await client.post(
                     endpoint_url,
                     content=body,
-                    headers={
-                        "Content-Type": "application/json",
-                        "User-Agent": "MagoBot-Webhooks/1.0",
-                        "X-Mago-Signature": _signature(secret, body),
-                        "X-Mago-Event-ID": str(event.event_uuid),
-                        "X-Mago-Delivery-ID": str(delivery.delivery_uuid),
-                    },
+                    headers=signed_headers,
                 )
             delivery.response_code = response.status_code
             if 200 <= response.status_code < 300:

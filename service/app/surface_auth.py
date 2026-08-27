@@ -119,6 +119,14 @@ def route_surface_status(request: Request) -> int | None:
         required = "customer"
     elif path == "/v1/platform" or path.startswith("/v1/platform/"):
         required = "customer"
+    elif path == "/v1/webhooks/events":
+        required = "customer"
+    elif (
+        path.startswith("/v1/projects/")
+        and len(path.split("/")) >= 5
+        and path.split("/")[4] in {"channels", "webhooks"}
+    ):
+        required = "customer"
     elif path in {
         "/v1/organizations",
         "/v1/integrations",

@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from ..db import SessionLocal
 from ..platform_models import ProviderResource, WebhookDelivery, WebhookEvent, WebhookSubscription
+from ..platform_webhook_events import canonical_event_type, subscription_event_matches
 
 router = APIRouter(prefix="/v1/webhooks", tags=["webhooks"])
 MAX_META_PAYLOAD_BYTES = 3 * 1024 * 1024
@@ -120,7 +121,8 @@ async def receive_meta_webhook(
 
     accepted = 0
     duplicate = 0
-    for provider_event_id, event_type, event_payload in _event_items(payload):
+    for provider_event_id, raw_event_type, event_payload in _event_items(payload):
+        canonical_type = canonical_event_type(raw_event_type, event_payload)
         existing = db.scalar(
             select(WebhookEvent.id).where(
                 WebhookEvent.provider_type == "meta_cloud",
@@ -136,7 +138,7 @@ async def receive_meta_webhook(
             provider_event_id=provider_event_id,
             tenant_id=resource.tenant_id if resource else None,
             resource_id=resource.id if resource else None,
-            event_type=event_type,
+            event_type=canonical_type,
             payload=event_payload,
             status="accepted" if resource else "unmapped",
             attempts=0,
@@ -159,7 +161,7 @@ async def receive_meta_webhook(
             deliveries = [
                 WebhookDelivery(subscription_id=subscription.id, event_id=event.id)
                 for subscription in subscriptions
-                if "all" in (subscription.events or []) or event_type in (subscription.events or [])
+                if subscription_event_matches(subscription.events, canonical_type, raw_event_type)
             ]
             if deliveries:
                 db.add_all(deliveries)

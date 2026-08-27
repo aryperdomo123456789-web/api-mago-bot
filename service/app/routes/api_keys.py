@@ -71,7 +71,16 @@ def create_key(
         project_id=project.id,
         prefix=raw_token[:16],
         token_hash=token_hash,
-        scopes=payload.scopes or ["whatsapp:messages:send", "whatsapp:messages:read"],
+        scopes=payload.scopes or [
+            "channels:read",
+            "channels:write",
+            "webhooks:read",
+            "webhooks:write",
+            "operations:read",
+            "operations:write",
+            "whatsapp:messages:send",
+            "whatsapp:messages:read",
+        ],
         expires_at=payload.expires_at,
         created_by=user.id,
     )

@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from ..db import SessionLocal
 from ..platform_crypto import decrypt_secret
+from ..platform_webhook_events import canonical_event_type, subscription_event_matches
 from ..platform_models import (
     Conversation,
     ConversationEvent,
@@ -220,17 +221,16 @@ def _update_state(row: EvolutionInstance, event_type: str, data: dict[str, Any])
     row.last_status_check_at = _now()
 
 
-def _deliveries_for_event(db: Session, row: EvolutionInstance, event: WebhookEvent, event_type: str) -> None:
+def _deliveries_for_event(db: Session, row: EvolutionInstance, event: WebhookEvent, canonical_type: str, raw_event_type: str) -> None:
     subscriptions = db.scalars(select(WebhookSubscription).where(
         WebhookSubscription.tenant_id == row.tenant_id,
         WebhookSubscription.project_id == row.project_id,
         WebhookSubscription.status == "active",
     )).all()
-    bucket = _event_bucket(event_type)
     db.add_all([
         WebhookDelivery(subscription_id=sub.id, event_id=event.id)
         for sub in subscriptions
-        if "all" in (sub.events or []) or bucket in (sub.events or [])
+        if subscription_event_matches(sub.events, canonical_type, raw_event_type)
     ])
 
 
@@ -257,7 +257,8 @@ async def receive_evolution_webhook(
     if not isinstance(payload, dict):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="JSON object required")
 
-    event_type = _event_type(payload)
+    raw_event_type = _event_type(payload)
+    canonical_type = canonical_event_type(raw_event_type, payload)
     provider_event_id = _provider_event_id(payload, row.instance_uuid)
     if _instance_id(payload, row.instance_uuid) not in {str(row.instance_uuid), row.instance_name, str(row.resource_id)}:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="instance does not match webhook endpoint")
@@ -273,21 +274,21 @@ async def receive_evolution_webhook(
     instance_event = EvolutionInstanceEvent(
         instance_id=row.id,
         provider_event_id=provider_event_id,
-        event_type=event_type,
+        event_type=raw_event_type,
         status="accepted",
         payload=sanitized,
         occurred_at=None,
     )
     db.add(instance_event)
     row_data = _event_data(payload)
-    _update_state(row, event_type, row_data)
-    _upsert_conversation(db, row, sanitized, provider_event_id, event_type)
+    _update_state(row, raw_event_type, row_data)
+    _upsert_conversation(db, row, sanitized, provider_event_id, raw_event_type)
     webhook_event = WebhookEvent(
         provider_type="evolution",
         provider_event_id=provider_event_id,
         tenant_id=row.tenant_id,
         resource_id=row.resource_id,
-        event_type=event_type,
+        event_type=canonical_type,
         payload=sanitized,
         status="accepted",
         attempts=0,
@@ -295,7 +296,7 @@ async def receive_evolution_webhook(
     db.add(webhook_event)
     try:
         db.flush()
-        _deliveries_for_event(db, row, webhook_event, event_type)
+        _deliveries_for_event(db, row, webhook_event, canonical_type, raw_event_type)
         db.commit()
     except IntegrityError:
         db.rollback()

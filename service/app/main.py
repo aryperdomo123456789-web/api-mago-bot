@@ -33,6 +33,7 @@ from .routes.conversations import router as conversations_router
 from .routes.portal_conversations import router as portal_conversations_router
 from .routes.owner_whatsapp import router as owner_whatsapp_router
 from .routes.operations import router as operations_router
+from .routes.m2m import router as m2m_router
 from .routes.ops import router as ops_router
 from .routes.ops_admin import router as ops_admin_router
 from .routes.ops_ui import router as ops_ui_router
@@ -207,6 +208,7 @@ app.include_router(conversations_router)
 app.include_router(portal_conversations_router)
 app.include_router(owner_whatsapp_router)
 app.include_router(operations_router)
+app.include_router(m2m_router)
 app.include_router(ops_router)
 app.include_router(ops_admin_router)
 app.include_router(ops_ui_router)
