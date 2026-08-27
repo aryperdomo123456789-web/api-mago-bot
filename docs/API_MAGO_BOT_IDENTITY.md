@@ -1,7 +1,7 @@
 # API Mago Bot — Identidade, superfícies e arquitetura
 
 **Produto:** API Mago Bot — Produto de API
-**Repositório:** `aryperdomo123456789-web/appapiwppmago`
+**Repositório:** `aryperdomo123456789-web/api-mago-bot`
 **Atualizado:** 27 de agosto de 2026
 **Autor:** Manus AI
 
@@ -81,5 +81,5 @@ O produto está apto para piloto controlado quando um tenant pode ser provisiona
 
 [1]: https://evo-api.mago-bot.com "API Mago Bot — Operations Console"
 [2]: https://app.mago-bot.com "API Mago Bot — Portal customer-scoped"
-[3]: https://github.com/aryperdomo123456789-web/appapiwppmago "API Mago Bot — Repositório"
+[3]: https://github.com/aryperdomo123456789-web/api-mago-bot "API Mago Bot — Repositório"
 [4]: https://github.com/aryperdomo123456789-web/project-hello "Mago Bot CRM — Repositório separado"
