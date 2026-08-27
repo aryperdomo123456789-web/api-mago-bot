@@ -21,6 +21,8 @@ Antes da promoção foram criados backups de código no VPS, sem substituir arqu
 
 A validação confirma identidade, rotas, documentação e saúde do runtime. Ela **não** homologa QR, conexão de número, inbound/outbound, mídia, status, reconexão ou entrega real de WhatsApp. Meta Cloud continua sendo o provider oficial; Evolution permanece uma camada de compatibilidade até o contrato operacional ser demonstrado com número e eventos de teste autorizados.
 
+Na verificação externa pós-promoção, `share-card.png` e `share-card-ui.png` revelaram um 404 causado pela allowlist de imagens do include Nginx do aaPanel, não pelo FastAPI. A correção foi versionada no commit `d6a1f42` e aplicada somente em `/www/server/panel/vhost/nginx/extension/app.mago-bot.com/00-proxy.conf`, com backup `00-proxy.conf.pre-d6a1f42-final-20260827T215425Z`, `nginx -t` aprovado e reload gracioso. Os dois assets passaram a responder 200 por HTTPS; nenhum serviço Docker foi reiniciado nesse hotfix.
+
 ## Resumo executivo
 
 Este snapshot registra a fase em que o projeto funcionava principalmente como central de licenças para uma API de WhatsApp. A evolução atual é a API Mago Bot, com control plane multi-tenant, providers separados, canais, conversas, webhooks e inbox.
