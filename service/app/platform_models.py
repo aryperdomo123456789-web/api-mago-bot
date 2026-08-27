@@ -154,12 +154,13 @@ class ServiceApiKey(Base):
 class IdempotencyRecord(Base):
     __tablename__ = "idempotency_records"
     __table_args__ = (
-        UniqueConstraint("tenant_id", "idempotency_key", "endpoint", name="uq_idempotency_tenant_key_endpoint"),
+        UniqueConstraint("tenant_id", "project_id", "idempotency_key", "endpoint", name="uq_idempotency_project_key_endpoint"),
         Index("idx_idempotency_expires_at", "expires_at"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     tenant_id: Mapped[int] = mapped_column(ForeignKey("platform_tenants.id", ondelete="CASCADE"), nullable=False)
+    project_id: Mapped[int | None] = mapped_column(ForeignKey("platform_projects.id", ondelete="CASCADE"), nullable=True)
     user_id: Mapped[int | None] = mapped_column(ForeignKey("panel_users.id", ondelete="SET NULL"), nullable=True)
     idempotency_key: Mapped[str] = mapped_column(String(160), nullable=False)
     endpoint: Mapped[str] = mapped_column(String(180), nullable=False)
@@ -168,6 +169,38 @@ class IdempotencyRecord(Base):
     response_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class Operation(Base):
+    __tablename__ = "platform_operations"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "project_id", "kind", "idempotency_key", name="uq_platform_operations_idempotency"),
+        Index("idx_platform_operations_project_status", "project_id", "status", "update_time"),
+        Index("idx_platform_operations_tenant_status", "tenant_id", "status", "update_time"),
+        Index("idx_platform_operations_expire_time", "expire_time"),
+        Index("idx_platform_operations_heartbeat_time", "status", "heartbeat_time"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    operation_uuid: Mapped[uuid_lib.UUID] = mapped_column("uuid", UUID(as_uuid=True), default=uuid_lib.uuid4, unique=True, nullable=False)
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("platform_tenants.id", ondelete="CASCADE"), nullable=False)
+    project_id: Mapped[int] = mapped_column(ForeignKey("platform_projects.id", ondelete="CASCADE"), nullable=False)
+    api_key_id: Mapped[int | None] = mapped_column(ForeignKey("service_api_keys.id", ondelete="SET NULL"), nullable=True)
+    actor_user_id: Mapped[int | None] = mapped_column(ForeignKey("panel_users.id", ondelete="SET NULL"), nullable=True)
+    kind: Mapped[str] = mapped_column(String(80), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="queued", server_default="queued")
+    idempotency_key: Mapped[str] = mapped_column(String(160), nullable=False)
+    request_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    metadata_json: Mapped[dict] = mapped_column("metadata", JSON, nullable=False, default=dict)
+    response_json: Mapped[dict | None] = mapped_column("response", JSON, nullable=True)
+    error_json: Mapped[dict | None] = mapped_column("error", JSON, nullable=True)
+    attempt_count: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0, server_default="0")
+    created_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    start_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    update_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    complete_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    expire_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    heartbeat_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class AuditEvent(Base):
@@ -255,7 +288,7 @@ class UsageLedgerEntry(Base):
 class OutboundMessage(Base):
     __tablename__ = "outbound_messages"
     __table_args__ = (
-        UniqueConstraint("tenant_id", "idempotency_key", name="uq_outbound_messages_tenant_idempotency"),
+        UniqueConstraint("tenant_id", "project_id", "idempotency_key", name="uq_outbound_messages_project_idempotency"),
         Index("idx_outbound_messages_tenant_status", "tenant_id", "status", "created_at"),
         Index("idx_outbound_messages_provider_id", "provider_type", "provider_message_id"),
     )

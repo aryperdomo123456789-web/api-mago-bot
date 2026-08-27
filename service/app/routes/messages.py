@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 from datetime import datetime, timezone
@@ -15,7 +14,9 @@ from ..platform_limits import DEFAULT_LIMITS, QuotaExceeded, get_service_api_key
 from ..platform_rate_limit import DistributedRateLimitExceeded, enforce_distributed_limit
 from ..platform_resilience import ProviderCircuitOpen, before_provider_call, record_provider_failure, record_provider_success
 from ..platform_crypto import decrypt_secret
-from ..platform_models import Conversation, ConversationEvent, EvolutionInstance, OutboundMessage, PlatformProject, ProviderIntegration, ProviderResource, ServiceApiKey, Tenant, UsageLedgerEntry
+from ..platform_models import Conversation, ConversationEvent, EvolutionInstance, Operation, OutboundMessage, PlatformProject, ProviderIntegration, ProviderResource, ServiceApiKey, Tenant, UsageLedgerEntry
+from ..platform_errors import error_body
+from ..platform_operations import canonical_request_hash, create_or_replay_operation, find_operation, mark_operation_failed, mark_operation_running, mark_operation_succeeded, operation_view, require_idempotency_key
 from ..platform_schemas import MessageSendRequest
 from ..providers import DryRunAdapter, EvolutionAdapter, MetaCloudAdapter, ProviderError
 
@@ -32,11 +33,6 @@ def get_db():
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
-
-
-def _request_hash(payload: MessageSendRequest) -> str:
-    encoded = json.dumps(payload.model_dump(mode="json"), sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()
 
 
 def _adapter(
@@ -67,6 +63,13 @@ def _safe_message(row: OutboundMessage) -> dict:
         "created_at": row.created_at,
         "error_code": row.error_code,
     }
+
+
+def _operation_message_view(row: OutboundMessage) -> dict:
+    result = _safe_message(row)
+    if result.get("created_at") is not None:
+        result["created_at"] = result["created_at"].isoformat() if hasattr(result["created_at"], "isoformat") else str(result["created_at"])
+    return result
 
 
 def _conversation_for_send(db: Session, project_id: int, tenant_id: int, conversation_id: UUID | None) -> Conversation | None:
@@ -140,9 +143,7 @@ async def send_message(
     api_key: ServiceApiKey = Depends(get_service_api_key),
 ):
     require_key_scope(api_key, "whatsapp:messages:send")
-    if not x_idempotency_key or len(x_idempotency_key.strip()) < 16 or len(x_idempotency_key) > 160:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="X-Idempotency-Key is required")
-    idempotency_key = x_idempotency_key.strip()
+    idempotency_key = require_idempotency_key(x_idempotency_key)
 
     project = db.scalar(
         select(PlatformProject).where(
@@ -154,11 +155,29 @@ async def send_message(
     if not project or api_key.project_id != project_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="project not found")
     conversation = _conversation_for_send(db, project_id, api_key.tenant_id, payload.conversation_id)
+    tenant = db.get(Tenant, api_key.tenant_id)
+    if not tenant or tenant.status != "active":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="tenant inactive")
 
-    request_hash = _request_hash(payload)
+    request_hash = canonical_request_hash(payload.model_dump(mode="json"))
+    existing_operation = find_operation(
+        db,
+        tenant_id=api_key.tenant_id,
+        project_id=project.id,
+        kind="message.send",
+        idempotency_key=idempotency_key,
+    )
+    if existing_operation:
+        if existing_operation.request_hash != request_hash:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail={"code": "idempotency_key_reused", "message": "A chave de idempotência foi reutilizada com outro payload.", "reason": "IDEMPOTENCY_KEY_REUSED"})
+        response.status_code = status.HTTP_200_OK
+        stored = existing_operation.response_json or {}
+        return {"operation": operation_view(existing_operation, organization_uuid=tenant.tenant_uuid, project_uuid=project.project_uuid), "message": stored.get("message"), "idempotent_replay": True}
+
     existing = db.scalar(
         select(OutboundMessage).where(
             OutboundMessage.tenant_id == api_key.tenant_id,
+            OutboundMessage.project_id == project.id,
             OutboundMessage.idempotency_key == idempotency_key,
         )
     )
@@ -167,10 +186,6 @@ async def send_message(
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="idempotency key reused with different payload")
         response.status_code = status.HTTP_200_OK
         return {"message": _safe_message(existing), "idempotent_replay": True}
-
-    tenant = db.get(Tenant, api_key.tenant_id)
-    if not tenant or tenant.status != "active":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="tenant inactive")
 
     try:
         limit = DEFAULT_LIMITS.get(tenant.plan_slug, DEFAULT_LIMITS["start"]).get("messages_per_minute", 60)
@@ -243,6 +258,22 @@ async def send_message(
                 detail={"code": "evolution_instance_not_connected", "status": managed_evolution.status},
             )
 
+    operation, operation_replay = create_or_replay_operation(
+        db,
+        tenant_id=api_key.tenant_id,
+        project_id=project.id,
+        kind="message.send",
+        idempotency_key=idempotency_key,
+        request_hash=request_hash,
+        api_key_id=api_key.id,
+        metadata={"state": "accepted", "provider": resource.provider_type},
+    )
+    if operation_replay:
+        response.status_code = status.HTTP_200_OK
+        stored = operation.response_json or {}
+        return {"operation": operation_view(operation, organization_uuid=tenant.tenant_uuid, project_uuid=project.project_uuid), "message": stored.get("message"), "idempotent_replay": True}
+    db.commit()
+
     stored_payload = payload.model_dump(mode="json")
     stored_payload["_request_hash"] = request_hash
     message = OutboundMessage(
@@ -279,6 +310,8 @@ async def send_message(
     )
     db.commit()
     db.refresh(message)
+    mark_operation_running(operation, metadata={"message_id": str(message.message_uuid), "state": "running"})
+    db.commit()
 
     provider_payload = payload.model_dump(exclude_none=True)
     try:
@@ -297,10 +330,15 @@ async def send_message(
             actor_type="control_plane",
             content={"status": "failed", "error_code": "provider_circuit_open", "message_id": str(message.message_uuid)},
         )
+        mark_operation_failed(
+            operation,
+            error_body(request, status_code=503, code="provider_circuit_open", message="O provider está temporariamente isolado.", reason="PROVIDER_CIRCUIT_OPEN", retryable=True, retry_after_seconds=exc.retry_after)["error"],
+            metadata={"state": "failed"},
+        )
         db.commit()
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail={"code": "provider_circuit_open", "message": "provider temporarily isolated"},
+            detail={"code": "provider_circuit_open", "message": "provider temporarily isolated", "reason": "PROVIDER_CIRCUIT_OPEN", "retryable": True, "retry_after_seconds": exc.retry_after},
             headers={"Retry-After": str(exc.retry_after)},
         ) from exc
 
@@ -347,10 +385,17 @@ async def send_message(
             actor_type="provider",
             content={"status": "failed", "error_code": exc.code, "message_id": str(message.message_uuid)},
         )
+        retry_after = 30 if exc.retryable else None
+        mark_operation_failed(
+            operation,
+            error_body(request, status_code=503 if exc.retryable else 502, code=exc.code, message="O provider não concluiu a operação.", reason="PROVIDER_UNAVAILABLE" if exc.retryable else "PROVIDER_ERROR", domain=f"api.mago-bot.com/providers/{resource.provider_type}", retryable=exc.retryable, retry_after_seconds=retry_after)["error"],
+            metadata={"state": "failed", "provider": resource.provider_type},
+        )
         db.commit()
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE if exc.retryable else status.HTTP_502_BAD_GATEWAY,
-            detail={"code": exc.code, "message": str(exc)},
+            detail={"code": exc.code, "message": str(exc), "reason": "PROVIDER_UNAVAILABLE" if exc.retryable else "PROVIDER_ERROR", "retryable": exc.retryable, "retry_after_seconds": retry_after},
+            headers={"Retry-After": str(retry_after)} if retry_after else None,
         ) from exc
 
     record_provider_success(db, provider_type=resource.provider_type, resource_key=str(resource.id))
@@ -366,7 +411,10 @@ async def send_message(
     )
     db.commit()
     db.refresh(message)
-    return {"message": _safe_message(message), "idempotent_replay": False}
+    mark_operation_succeeded(operation, {"message": _operation_message_view(message)}, metadata={"state": "succeeded", "provider": resource.provider_type})
+    db.commit()
+    db.refresh(operation)
+    return {"message": _safe_message(message), "operation": operation_view(operation, organization_uuid=tenant.tenant_uuid, project_uuid=project.project_uuid), "idempotent_replay": False}
 
 
 @router.get("/projects/{project_id}/messages")

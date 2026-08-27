@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import hashlib
-import json
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -11,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from ..db import SessionLocal
 from ..platform_limits import get_service_api_key, require_key_scope
+from ..platform_operations import canonical_request_hash, record_legacy_idempotency, require_idempotency_key
 from ..platform_models import (
     Conversation,
     ConversationEvent,
@@ -300,14 +299,13 @@ def append_conversation_event(
     row = _conversation_for_key(db, project_id, conversation_id, api_key)
     if row.status == "archived":
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="conversation archived")
-    if not x_idempotency_key or len(x_idempotency_key.strip()) < 16 or len(x_idempotency_key) > 160:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="X-Idempotency-Key is required")
-    idempotency_key = x_idempotency_key.strip()
-    request_hash = hashlib.sha256(json.dumps(payload.model_dump(mode="json"), sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+    idempotency_key = require_idempotency_key(x_idempotency_key)
+    request_hash = canonical_request_hash(payload.model_dump(mode="json"))
     endpoint = f"conversation_events:{conversation_id}"
     existing = db.scalar(
         select(IdempotencyRecord).where(
             IdempotencyRecord.tenant_id == api_key.tenant_id,
+            IdempotencyRecord.project_id == project_id,
             IdempotencyRecord.idempotency_key == idempotency_key,
             IdempotencyRecord.endpoint == endpoint,
         )
@@ -342,15 +340,15 @@ def append_conversation_event(
 
     db.add(event)
     db.flush()
-    db.add(
-        IdempotencyRecord(
-            tenant_id=api_key.tenant_id,
-            idempotency_key=idempotency_key,
-            endpoint=endpoint,
-            request_hash=request_hash,
-            response_json={"event_id": str(event.event_uuid), "conversation_status": row.status},
-            expires_at=_utcnow().replace(year=_utcnow().year + 1),
-        )
+    record_legacy_idempotency(
+        db,
+        tenant_id=api_key.tenant_id,
+        project_id=project_id,
+        user_id=None,
+        idempotency_key=idempotency_key,
+        endpoint=endpoint,
+        request_hash=request_hash,
+        response_json={"event_id": str(event.event_uuid), "conversation_status": row.status},
     )
     now = _utcnow()
     row.last_event_at = now

@@ -129,6 +129,7 @@ def route_surface_status(request: Request) -> int | None:
         "/v1/analytics",
         "/v1/jobs",
         "/v1/onboarding",
+        "/v1/operations",
     } or any(path.startswith(prefix + "/") for prefix in {
         "/v1/organizations",
         "/v1/integrations",
@@ -139,6 +140,7 @@ def route_surface_status(request: Request) -> int | None:
         "/v1/analytics",
         "/v1/jobs",
         "/v1/onboarding",
+        "/v1/operations",
     }):
         required = "customer"
     elif path in {

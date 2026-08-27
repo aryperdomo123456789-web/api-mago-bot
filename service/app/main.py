@@ -2,7 +2,8 @@ import fcntl
 import os
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import select
@@ -12,6 +13,7 @@ from .core.config import Settings
 from .db import Base, engine
 from .models import CustomerAccount, LicenseAuditLog, LicenseKey, LicenseProject, OwnerProfile, PanelUser, PartnerApplication, PlanCatalog  # noqa: F401
 from . import platform_models  # noqa: F401
+from .platform_errors import from_http_exception, from_validation_exception
 from .platform_http import SecurityHeadersMiddleware
 from .routes.account import router as account_router
 from .routes.admin import router as admin_router
@@ -30,6 +32,7 @@ from .routes.webhook_subscriptions import router as webhook_subscriptions_router
 from .routes.conversations import router as conversations_router
 from .routes.portal_conversations import router as portal_conversations_router
 from .routes.owner_whatsapp import router as owner_whatsapp_router
+from .routes.operations import router as operations_router
 from .routes.ops import router as ops_router
 from .routes.ops_admin import router as ops_admin_router
 from .routes.ops_ui import router as ops_ui_router
@@ -60,6 +63,16 @@ app = FastAPI(
 )
 app.add_middleware(SecurityHeadersMiddleware)
 settings = Settings()
+
+
+@app.exception_handler(HTTPException)
+async def structured_http_exception_handler(request: Request, exc: HTTPException):
+    return from_http_exception(request, exc)
+
+
+@app.exception_handler(RequestValidationError)
+async def structured_validation_exception_handler(request: Request, exc: RequestValidationError):
+    return from_validation_exception(request, exc)
 
 
 @app.get("/docs", include_in_schema=False, response_class=HTMLResponse)
@@ -193,6 +206,7 @@ app.include_router(webhook_subscriptions_router)
 app.include_router(conversations_router)
 app.include_router(portal_conversations_router)
 app.include_router(owner_whatsapp_router)
+app.include_router(operations_router)
 app.include_router(ops_router)
 app.include_router(ops_admin_router)
 app.include_router(ops_ui_router)

@@ -9,6 +9,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
+from .platform_errors import internal_error_response
 from .platform_observability import record_request
 from .surface_auth import route_surface_status
 
@@ -49,17 +50,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "unhandled_request_exception",
                 extra={"request_id": request_id, "trace_id": trace_id, "method": request.method, "path": request.url.path},
             )
-            response = JSONResponse(
-                status_code=500,
-                content={
-                    "error": {
-                        "code": "internal_error",
-                        "message": "A operação não pôde ser concluída.",
-                        "request_id": request_id,
-                    }
-                },
-                headers={"Cache-Control": "no-store"},
-            )
+            response = internal_error_response(request)
         elapsed_ms = int((time.perf_counter() - started) * 1000)
         record_request(request.method, request.url.path, response.status_code, elapsed_ms)
         logger.info(
