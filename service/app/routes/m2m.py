@@ -25,6 +25,7 @@ from ..m2m_schemas import (
     M2MWebhookView,
 )
 from ..platform_crypto import encrypt_secret
+from ..qr_code import qr_svg_data
 from ..platform_errors import error_body
 from ..platform_limits import get_service_api_key_x_api_key, require_key_scope
 from ..platform_models import (
@@ -387,7 +388,9 @@ async def connect_channel_m2m(channel_uuid: UUID, request: Request, db: Session 
     mark_operation_running(operation)
     db.commit()
     try:
-        provider = await EvolutionManagementAdapter(row.provider_flavor).connect(row.instance_name, _secret(row), webhook_url=row.webhook_url or _public_webhook(row), events=row.subscribed_events)
+        adapter = EvolutionManagementAdapter(row.provider_flavor)
+        await adapter.ensure_instance(row.instance_name, _secret(row) or "")
+        provider = await adapter.connect(row.instance_name, _secret(row), webhook_url=row.webhook_url or _public_webhook(row), events=row.subscribed_events)
         row.status = "qr_pending" if provider.get("qrcode") or provider.get("code") else "connecting"
         row.last_error_code = None
         row.last_error_message = None
@@ -425,11 +428,13 @@ async def qr_channel_m2m(channel_uuid: UUID, request: Request, response: Respons
     mark_operation_running(operation)
     db.commit()
     try:
-        result = await EvolutionManagementAdapter(row.provider_flavor).qr(row.instance_name, _secret(row))
+        adapter = EvolutionManagementAdapter(row.provider_flavor)
+        await adapter.ensure_instance(row.instance_name, _secret(row) or "")
+        result = await adapter.qr(row.instance_name, _secret(row))
         ttl = int(result.get("expires_in", 60))
         row.status = "qr_pending"
         row.qr_expires_at = _now() + timedelta(seconds=min(max(ttl, 15), 300))
-        response_body = {"ok": True, "channel_id": row.instance_uuid, "expires_at": row.qr_expires_at, "qrcode": result.get("qrcode"), "operation": _operation_public(db, operation)}
+        response_body = {"ok": True, "channel_id": row.instance_uuid, "expires_at": row.qr_expires_at, "qrcode": result.get("qrcode"), "qrcode_svg": qr_svg_data(result.get("qrcode")), "operation": _operation_public(db, operation)}
         mark_operation_succeeded(operation, _json_safe(response_body), metadata={"expires_at": row.qr_expires_at.isoformat()})
         _audit(db, request, api_key, tenant.id, "m2m.channel.qr", str(row.instance_uuid))
         db.commit()

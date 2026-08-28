@@ -340,14 +340,17 @@
     const provider = state.channelProvider[channel.id];
     if (!provider) return null;
     const qrValue = provider.qrcode || provider.qr || provider.qr_code;
+    const qrImage = provider.qrcode_svg || provider.qr_svg;
     const codeValue = provider.code || provider.pairing_code;
-    if (!qrValue && !codeValue) return node("p", { className: "muted", textContent: "O provider ainda não retornou QR ou código. Atualize o status em alguns segundos." });
+    if (!qrValue && !qrImage && !codeValue) return node("p", { className: "muted", textContent: "O provider ainda não retornou QR ou código. Atualize o status em alguns segundos." });
     const output = node("div", { className: "channel-output" }, [node("p", { className: "eyebrow", textContent: codeValue ? "PAIRING" : "QR DO CANAL" })]);
     if (codeValue) output.append(node("div", { className: "pairing-code", textContent: String(codeValue) }));
-    if (qrValue) {
-      const raw = String(qrValue);
-      if (raw.startsWith("data:image/")) output.append(node("img", { className: "channel-qr", src: raw, alt: "QR Code do canal Evolution para escanear no WhatsApp" }));
-      else output.append(node("pre", { className: "code-block", textContent: raw }));
+    if (qrImage) {
+      const imageValue = String(qrImage);
+      const source = imageValue.startsWith("data:image/") ? imageValue : `data:image/svg+xml;charset=utf-8,${encodeURIComponent(imageValue)}`;
+      output.append(node("img", { className: "channel-qr", src: source, alt: "QR Code do canal Evolution para escanear no WhatsApp" }));
+    } else if (qrValue) {
+      output.append(node("p", { className: "muted", textContent: "QR recebido, mas a imagem ainda não está disponível. Solicite um novo QR." }));
     }
     output.append(node("p", { className: "muted", textContent: "O QR é sensível: escaneie apenas no WhatsApp do número de laboratório e não compartilhe." }));
     return output;
@@ -359,7 +362,7 @@
     state.channelActions[actionKey] = true;
     if (state.section === "channels") renderChannels();
     const method = action === "qr" || action === "status" ? "GET" : "POST";
-    const path = action === "qr" ? `/v1/channels/${encodeURIComponent(channel.id)}/qr` : action === "status" ? `/v1/channels/${encodeURIComponent(channel.id)}/status` : `/v1/channels/${encodeURIComponent(channel.id)}/${action}`;
+    const path = action === "qr" ? `/v1/platform/channels/${encodeURIComponent(channel.id)}/qr` : action === "status" ? `/v1/platform/channels/${encodeURIComponent(channel.id)}/status` : `/v1/platform/channels/${encodeURIComponent(channel.id)}/${action}`;
     try {
       const result = await api(path, { method, body: method === "POST" ? "{}" : undefined, component: `channel-${action}`, payloadContext: { channel_id: channel.id } });
       if (result.provider) state.channelProvider[channel.id] = result.provider;

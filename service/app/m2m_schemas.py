@@ -79,6 +79,7 @@ class M2MChannelQrResponse(BaseModel):
     channel_id: UUID
     expires_at: datetime | None = None
     qrcode: str | None = None
+    qrcode_svg: str | None = None
     operation: dict | None = None
 
 

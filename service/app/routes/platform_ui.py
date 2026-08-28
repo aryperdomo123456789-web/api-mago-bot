@@ -114,7 +114,7 @@ def platform_ui(request: Request) -> HTMLResponse:
     </section>
   </main>
   <script src="/assets/platform-diagnostics.js" defer></script>
-  <script src="/assets/platform-app.js?v=20260828-channels-recovery-1" defer></script>
+  <script src="/assets/platform-app.js?v=20260828-channels-recovery-2" defer></script>
 </body>
 </html>"""
     return HTMLResponse(html, headers={"Cache-Control": "no-store"})

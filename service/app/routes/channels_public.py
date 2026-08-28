@@ -19,6 +19,7 @@ from ..platform_models import AuditEvent, EvolutionInstance, PlatformProject, Pr
 from ..platform_rbac import require_tenant_permission
 from ..platform_ssrf import UnsafeWebhookEndpoint, validate_webhook_endpoint
 from ..providers.base import ProviderError
+from ..qr_code import qr_svg_data
 from ..providers.evolution_management import EvolutionManagementAdapter
 
 router = APIRouter(prefix="/v1", tags=["channels"])
@@ -250,6 +251,7 @@ async def create_channel(organization_id: UUID, payload: ChannelCreateRequest, r
     return {"ok": True, "channel": _serialize_with_context(db, row), "provider": created.get("provider", {})}
 
 
+@router.get("/platform/channels/{channel_id}")
 @router.get("/channels/{channel_id}")
 def get_channel(channel_id: UUID, request: Request, db: Session = Depends(get_db)):
     actor = _actor(request, db)
@@ -257,6 +259,7 @@ def get_channel(channel_id: UUID, request: Request, db: Session = Depends(get_db
     return {"channel": _serialize_with_context(db, row)}
 
 
+@router.post("/platform/channels/{channel_id}/connect", response_model=ChannelActionResponse)
 @router.post("/channels/{channel_id}/connect", response_model=ChannelActionResponse)
 async def connect_channel(channel_id: UUID, request: Request, db: Session = Depends(get_db)):
     actor = _actor(request, db)
@@ -279,6 +282,7 @@ async def connect_channel(channel_id: UUID, request: Request, db: Session = Depe
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE if exc.retryable else status.HTTP_502_BAD_GATEWAY, detail={"code": exc.code, "message": str(exc)}) from exc
 
 
+@router.get("/platform/channels/{channel_id}/qr")
 @router.get("/channels/{channel_id}/qr")
 async def channel_qr(channel_id: UUID, request: Request, response: Response, db: Session = Depends(get_db)):
     actor = _actor(request, db)
@@ -293,7 +297,7 @@ async def channel_qr(channel_id: UUID, request: Request, response: Response, db:
         _audit(db, request, actor, row, "channel.qr")
         db.commit()
         response.headers["Cache-Control"] = "no-store, private"
-        return {"ok": True, "channel_id": row.instance_uuid, "expires_at": row.qr_expires_at, "qrcode": result.get("qrcode")}
+        return {"ok": True, "channel_id": row.instance_uuid, "expires_at": row.qr_expires_at, "qrcode_svg": qr_svg_data(result.get("qrcode"))}
     except ProviderError as exc:
         row.status = "degraded"
         row.last_error_code = exc.code
@@ -303,6 +307,7 @@ async def channel_qr(channel_id: UUID, request: Request, response: Response, db:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE if exc.retryable else status.HTTP_502_BAD_GATEWAY, detail={"code": exc.code, "message": str(exc)}) from exc
 
 
+@router.get("/platform/channels/{channel_id}/status")
 @router.get("/channels/{channel_id}/status")
 async def channel_status(channel_id: UUID, request: Request, db: Session = Depends(get_db)):
     actor = _actor(request, db)
@@ -327,6 +332,7 @@ async def channel_status(channel_id: UUID, request: Request, db: Session = Depen
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE if exc.retryable else status.HTTP_502_BAD_GATEWAY, detail={"code": exc.code, "message": str(exc)}) from exc
 
 
+@router.post("/platform/channels/{channel_id}/reconnect", response_model=ChannelActionResponse)
 @router.post("/channels/{channel_id}/reconnect", response_model=ChannelActionResponse)
 async def reconnect_channel(channel_id: UUID, request: Request, db: Session = Depends(get_db)):
     actor = _actor(request, db)
@@ -347,6 +353,7 @@ async def reconnect_channel(channel_id: UUID, request: Request, db: Session = De
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE if exc.retryable else status.HTTP_502_BAD_GATEWAY, detail={"code": exc.code, "message": str(exc)}) from exc
 
 
+@router.post("/platform/channels/{channel_id}/disconnect", response_model=ChannelActionResponse)
 @router.post("/channels/{channel_id}/disconnect", response_model=ChannelActionResponse)
 async def disconnect_channel(channel_id: UUID, request: Request, db: Session = Depends(get_db)):
     actor = _actor(request, db)
