@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const state = { user: null, tenants: [], projects: [], conversations: [], channels: [], channelProvider: {}, inbox: [], onboarding: null, ownerWhatsapp: null, selectedTenant: null, section: "overview", signup: false };
+  const state = { user: null, tenants: [], projects: [], conversations: [], channels: [], channelProvider: {}, channelActions: {}, inbox: [], apiKeys: [], newlyIssuedKey: null, onboarding: null, ownerWhatsapp: null, selectedTenant: null, section: "overview", signup: false };
   const $ = (selector) => document.querySelector(selector);
   const syncMobileNav = (open) => { const dashboard = $("#dashboard-view"); const toggle = $("#mobile-menu-toggle"); if (!dashboard) return; dashboard.classList.toggle("nav-open", open); document.body.classList.toggle("mobile-nav-open", open); toggle?.setAttribute("aria-expanded", String(open)); toggle?.setAttribute("aria-label", open ? "Fechar menu principal" : "Abrir menu principal"); };
   const diagnostics = window.MagoDiagnostics || { capture: () => null, safeRender: (_name, renderer) => renderer() };
@@ -36,12 +36,14 @@
   }
 
   function showAlert(target, message, success = false) {
+    if (!target) return;
     target.textContent = message;
     target.className = success ? "alert success" : "alert";
     target.hidden = false;
   }
 
   function hideAlert(target) {
+    if (!target) return;
     target.hidden = true;
     target.textContent = "";
   }
@@ -53,10 +55,10 @@
     try {
       response = await fetch(path, {
         credentials: "same-origin",
+        ...fetchOptions,
+        headers: { "Content-Type": "application/json", ...(fetchOptions.headers || {}) },
         timeoutMs,
         requestId,
-        headers: { "Content-Type": "application/json", ...(fetchOptions.headers || {}) },
-        ...fetchOptions,
       });
     } catch (error) {
       captureError(error, { source: "network", component, requestId, payload: payloadContext });
@@ -125,6 +127,12 @@
     if (!state.selectedTenant) { state.projects = []; return; }
     const data = await api(`/v1/platform/projects?tenant_id=${encodeURIComponent(state.selectedTenant.id)}`, { component: "project-loader" });
     state.projects = Array.isArray(data.items) ? data.items : [];
+  }
+
+  async function loadApiKeys() {
+    const tenant = state.selectedTenant;
+    const project = activeProject();
+    state.apiKeys = tenant && project ? (await api(`/v1/platform/projects/${encodeURIComponent(project.id)}/keys?tenant_id=${encodeURIComponent(tenant.id)}`, { component: "api-keys-loader" })).items || [] : [];
   }
 
   async function loadConversations() {
@@ -346,12 +354,30 @@
   }
 
   async function channelAction(channel, action) {
+    const actionKey = `${channel.id}:${action}`;
+    if (state.channelActions[actionKey]) return;
+    state.channelActions[actionKey] = true;
+    if (state.section === "channels") renderChannels();
     const method = action === "qr" || action === "status" ? "GET" : "POST";
     const path = action === "qr" ? `/v1/channels/${encodeURIComponent(channel.id)}/qr` : action === "status" ? `/v1/channels/${encodeURIComponent(channel.id)}/status` : `/v1/channels/${encodeURIComponent(channel.id)}/${action}`;
-    const result = await api(path, { method, body: method === "POST" ? "{}" : undefined, component: `channel-${action}`, payloadContext: { channel_id: channel.id } });
-    if (result.provider) state.channelProvider[channel.id] = result.provider;
-    if (action === "qr") state.channelProvider[channel.id] = result;
-    await loadChannels(); renderChannels();
+    try {
+      const result = await api(path, { method, body: method === "POST" ? "{}" : undefined, component: `channel-${action}`, payloadContext: { channel_id: channel.id } });
+      if (result.provider) state.channelProvider[channel.id] = result.provider;
+      if (action === "qr") state.channelProvider[channel.id] = result;
+      await loadChannels();
+      showAlert($("#dashboard-alert"), action === "qr" ? "QR atualizado. Escaneie somente no WhatsApp de laboratório." : "Ação do canal concluída.", true);
+    } catch (error) {
+      captureError(error, { source: "action", component: `channel-${action}`, payload: { channel_id: channel.id } });
+      showAlert($("#dashboard-alert"), error.message);
+    } finally {
+      delete state.channelActions[actionKey];
+      if (state.section === "channels") renderChannels();
+    }
+  }
+
+  function connectLabelFor(channel) {
+    const action = ["created", "disconnected", "degraded"].includes(channel.status) ? "connect" : "reconnect";
+    return { action, label: action === "connect" ? "Conectar" : "Reconectar" };
   }
 
   function renderChannels() {
@@ -365,7 +391,7 @@
     form.addEventListener("submit", async (event) => { event.preventDefault(); const submit = form.querySelector("button[type=submit]"); submit.disabled = true; try { await api(`/v1/organizations/${encodeURIComponent(tenant.uuid)}/channels`, { method: "POST", headers: { "Idempotency-Key": `channel-${crypto.randomUUID ? crypto.randomUUID() : Date.now()}` }, body: JSON.stringify({ project_id: project.uuid, display_name: displayName.value.trim(), provider: "evolution", provider_flavor: flavor.value, events: ["MESSAGES_UPSERT", "CONNECTION_UPDATE"] }), component: "channel-create", payloadContext: { provider: "evolution", provider_flavor: flavor.value } }); await loadChannels(); renderChannels(); showAlert($("#dashboard-alert"), "Canal criado. Agora inicie a conexão para obter o QR.", true); } catch (error) { showAlert($("#channel-create-msg"), error.message); } finally { submit.disabled = false; } });
     const list = node("div", { className: "channel-list" });
     if (!state.channels.length) list.append(node("div", { className: "empty" }, [node("strong", { textContent: "Nenhum canal neste projeto" }), node("p", { className: "muted", textContent: "Crie o canal de laboratório acima. O provider será identificado como Evolution compatibilidade." })]));
-    state.channels.forEach((channel) => { const actions = node("div", { className: "button-row" }); const connectLabel = ["created", "disconnected", "degraded"].includes(channel.status) ? "Conectar" : "Reconectar"; actions.append(node("button", { className: "button button-primary small", type: "button", textContent: connectLabel, onclick: () => channelAction(channel, connectLabel === "Conectar" ? "connect" : "reconnect") }), node("button", { className: "button button-ghost small", type: "button", textContent: "Obter QR", onclick: () => channelAction(channel, "qr") }), node("button", { className: "button button-ghost small", type: "button", textContent: "Atualizar status", onclick: () => channelAction(channel, "status") })); const row = node("article", { className: "channel-row" }, [node("div", { className: "channel-row-head" }, [node("div", {}, [node("p", { className: "eyebrow", textContent: channel.provider_flavor || "EVOLUTION" }), node("h4", { textContent: channel.display_name }), node("p", { className: "muted", textContent: `${channel.phone_number || "Número aguardando conexão"} · ${channel.webhook_configured ? "webhook configurado" : "webhook pendente"}` })]), node("span", { className: `badge channel-status-${channel.status}`, textContent: channel.status })]), actions]); const providerOutput = renderProviderOutput(channel); if (providerOutput) row.append(providerOutput); list.append(row); });
+    state.channels.forEach((channel) => { const actions = node("div", { className: "button-row" }); const connectAction = connectLabelFor(channel); const connectButton = node("button", { className: "button button-primary small", type: "button", textContent: connectAction.label, onclick: () => void channelAction(channel, connectAction.action) }); const qrButton = node("button", { className: "button button-ghost small", type: "button", textContent: "Obter QR", onclick: () => void channelAction(channel, "qr") }); const statusButton = node("button", { className: "button button-ghost small", type: "button", textContent: "Atualizar status", onclick: () => void channelAction(channel, "status") }); [connectButton, qrButton, statusButton].forEach((button) => { const action = button === connectButton ? connectAction.action : button === qrButton ? "qr" : "status"; if (state.channelActions[`${channel.id}:${action}`]) { button.disabled = true; button.textContent = "Processando…"; } }); actions.append(connectButton, qrButton, statusButton); const row = node("article", { className: "channel-row" }, [node("div", { className: "channel-row-head" }, [node("div", {}, [node("p", { className: "eyebrow", textContent: channel.provider_flavor || "EVOLUTION" }), node("h4", { textContent: channel.display_name }), node("p", { className: "muted", textContent: `${channel.phone_number || "Número aguardando conexão"} · ${channel.webhook_configured ? "webhook configurado" : "webhook pendente"}` })]), node("span", { className: `badge channel-status-${channel.status}`, textContent: channel.status })]), actions]); const providerOutput = renderProviderOutput(channel); if (providerOutput) row.append(providerOutput); list.append(row); });
     content.replaceChildren(node("section", { className: "panel-card channel-hero" }, [node("div", { className: "section-intro" }, [node("div", {}, [node("p", { className: "eyebrow", textContent: "CANAIS / COMPATIBILIDADE" }), node("h3", { textContent: "Conecte seu primeiro número" }), node("p", { className: "muted", textContent: `${tenant.legal_name} · ${project.name}` })]), node("span", { className: "badge", textContent: "Evolution — compatibilidade" })]), form]), node("section", { className: "panel-card" }, [node("div", { className: "section-intro" }, [node("div", {}, [node("p", { className: "eyebrow", textContent: "CANAIS ATIVOS" }), node("h3", { textContent: "Saúde e conexão" })]), node("span", { className: "badge", textContent: `${state.channels.length} canal(is)` })]), list]));
   }
 
@@ -396,6 +422,27 @@
     if (!state.inbox.length) list.append(node("div", { className: "empty" }, [node("strong", { textContent: "Inbox aguardando o primeiro evento" }), node("p", { className: "muted", textContent: "Quando um webhook inbound chegar, a conversa aparecerá com estado, fila e assignment." })]));
     state.inbox.forEach((conversation) => { const customer = conversation.customer?.display_name || conversation.customer?.external_ref || "Contato sem nome"; const actions = node("div", { className: "button-row" }); if (conversation.assignment?.assignee_user_id !== state.user?.id) actions.append(node("button", { className: "button button-primary small", type: "button", textContent: "Assumir", onclick: () => inboxAction(conversation, "claim") })); actions.append(node("button", { className: "button button-ghost small", type: "button", textContent: "Resolver", onclick: () => inboxAction(conversation, "resolve") })); const row = node("article", { className: "inbox-row" }, [node("button", { className: "inbox-row-main", type: "button", onclick: () => openInboxConversation(conversation.id) }, [node("div", {}, [node("strong", { textContent: customer }), node("small", { textContent: `${conversation.channel || "canal"} · ${conversation.subject || "Sem assunto"}` })]), node("span", { className: "badge", textContent: conversation.status || "active" })]), actions]); list.append(row); });
     content.replaceChildren(node("section", { className: "panel-card inbox-hero" }, [node("div", { className: "section-intro" }, [node("div", {}, [node("p", { className: "eyebrow", textContent: "INBOX / DISTRIBUIÇÃO" }), node("h3", { textContent: "Atenda sem perder contexto" }), node("p", { className: "muted", textContent: `${tenant.legal_name} · ${state.inbox.length} conversa(s) carregada(s)` })]), node("span", { className: "badge", textContent: "tenant-scoped" })]), list]));
+  }
+
+  function renderApiKeys() {
+    const content = $("#dashboard-content");
+    const tenant = state.selectedTenant;
+    const project = activeProject();
+    if (!tenant || !project) { content.replaceChildren(node("article", { className: "panel-card" }, [node("p", { className: "eyebrow", textContent: "API KEYS" }), node("h3", { textContent: "Crie um projeto antes da chave" }), node("p", { className: "muted", textContent: "Cada chave pertence a um projeto e nunca é compartilhada entre tenants." })])); return; }
+    const scopes = ["channels:read", "channels:write", "webhooks:read", "webhooks:write", "whatsapp:messages:send"];
+    const selected = new Set(scopes);
+    const scopeList = node("div", { className: "scope-grid" });
+    scopes.forEach((scope) => { const checkbox = node("input", { type: "checkbox", value: scope, checked: "true" }); checkbox.checked = selected.has(scope); checkbox.addEventListener("change", () => checkbox.checked ? selected.add(scope) : selected.delete(scope)); scopeList.append(node("label", { className: "check-row scope-option" }, [checkbox, node("span", { textContent: scope })])); });
+    const form = node("form", { className: "form-stack" }, [node("p", { className: "form-hint", textContent: `Projeto: ${project.name} · ${tenant.legal_name}` }), node("p", { className: "muted", textContent: "A chave será exibida uma única vez. Copie diretamente desta tela e nunca a envie pelo chat." }), scopeList, node("button", { className: "button button-primary", type: "submit", textContent: "Emitir chave do laboratório" }), node("div", { id: "api-key-create-msg", className: "alert", hidden: true })]);
+    form.addEventListener("submit", async (event) => { event.preventDefault(); const submit = form.querySelector("button[type=submit]"); submit.disabled = true; try { const result = await api(`/v1/platform/projects/${encodeURIComponent(project.id)}/keys?tenant_id=${encodeURIComponent(tenant.id)}`, { method: "POST", body: JSON.stringify({ project_id: project.id, scopes: [...selected] }), component: "api-key-create", payloadContext: { scopes: [...selected] } }); state.newlyIssuedKey = result.key || null; await loadApiKeys(); renderApiKeys(); } catch (error) { showAlert($("#api-key-create-msg"), error.message); } finally { submit.disabled = false; } });
+    const issued = state.newlyIssuedKey;
+    const issuedPanel = issued?.token ? node("article", { className: "one-time-secret" }, [node("p", { className: "eyebrow", textContent: "TOKEN DE USO ÚNICO" }), node("p", { className: "muted", textContent: "Copie agora. O token não será retornado novamente pela API." }), node("code", { className: "secret-token", textContent: issued.token }), node("button", { className: "button button-primary small", type: "button", textContent: "Copiar chave" , onclick: async () => { await navigator.clipboard.writeText(issued.token); showAlert($("#api-key-create-msg"), "Chave copiada para a área de transferência.", true); } })]) : null;
+    const rows = node("div", { className: "api-key-list" });
+    if (!state.apiKeys.length) rows.append(node("p", { className: "empty", textContent: "Nenhuma chave emitida neste projeto." }));
+    state.apiKeys.forEach((key) => rows.append(node("article", { className: "api-key-row" }, [node("div", {}, [node("strong", { textContent: `${key.prefix}••••••••` }), node("small", { textContent: `${(key.scopes || []).join(" · ")} · criada em ${key.created_at || "—"}` })]), node("span", { className: "badge", textContent: key.status })])));
+    const panel = node("section", { className: "panel-card" }, [node("div", { className: "section-intro" }, [node("div", {}, [node("p", { className: "eyebrow", textContent: "CREDENCIAL M2M" }), node("h3", { textContent: "Service API Key do projeto" }), node("p", { className: "muted", textContent: "Escopos mínimos para channels, webhooks e envio controlado." })])]), form]);
+    if (issuedPanel) panel.append(issuedPanel);
+    content.replaceChildren(panel, node("section", { className: "panel-card" }, [node("div", { className: "section-intro" }, [node("div", {}, [node("p", { className: "eyebrow", textContent: "CHAVES ATIVAS" }), node("h3", { textContent: "Listagem mascarada" })]), node("span", { className: "badge", textContent: `${state.apiKeys.length} chave(s)` })]), rows]));
   }
 
   function renderGeneric(title, description) {
@@ -491,12 +538,12 @@
     $("#dashboard-title").textContent = titles[state.section] || titles.overview;
     const renderers = {
       overview: ["Visão geral", renderOverview],
-      onboarding: ["Primeiro valor", () => { renderOnboarding(); if (activeProject()) void loadOnboarding().then(renderOnboarding).catch((error) => { captureError(error, { source: "network", component: "onboarding-loader" }); showAlert($("#dashboard-alert"), error.message); }); }],
+      onboarding: ["Primeiro valor", renderOnboarding],
       projects: ["Projetos", renderProjects],
-      channels: ["Canais", () => { renderChannels(); if (activeProject()) void loadChannels().then(renderChannels).catch((error) => { captureError(error, { source: "network", component: "channels-loader" }); showAlert($("#dashboard-alert"), error.message); }); }],
-      inbox: ["Inbox", () => { renderInbox(); if (activeProject()) void loadInbox().then(renderInbox).catch((error) => { captureError(error, { source: "network", component: "inbox-loader" }); showAlert($("#dashboard-alert"), error.message); }); }],
+      channels: ["Canais", renderChannels],
+      inbox: ["Inbox", renderInbox],
       conversations: ["Conversas", renderConversations],
-      keys: ["API keys", () => renderGeneric("API keys", "Crie credenciais por projeto, atribua scopes mínimos e revogue sem derrubar o tenant inteiro.")],
+      keys: ["API keys", renderApiKeys],
       webhooks: ["Webhooks", () => renderGeneric("Webhooks", "Eventos Meta entram assinados, passam por idempotência e serão entregues ao endpoint do cliente com replay controlado.")],
       usage: ["Uso & quotas", () => renderGeneric("Uso & quotas", "Consumo por tenant, limite de mensagens e sinais de qualidade do provider ficam observáveis antes de virar incêndio.")],
       "owner-whatsapp": ["WhatsApp do dono", renderOwnerWhatsapp],
@@ -569,12 +616,26 @@
   $("#login-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     const form = event.currentTarget;
+    const mfaRow = $("#login-mfa-row");
+    const mfaInput = $("#login-mfa-code");
     hideAlert($("#auth-alert")); setLoading(form, true);
     try {
-      const data = await api("/v1/platform/auth/login", { method: "POST", body: JSON.stringify(formObject(form)) });
+      const credentials = formObject(form);
+      credentials.mfa_code = String(credentials.mfa_code || "").trim() || null;
+      const data = await api("/v1/platform/auth/login", { method: "POST", body: JSON.stringify(credentials), component: "auth-form", payloadContext: { mfa_present: Boolean(credentials.mfa_code) } });
       state.user = data.user; await loadTenants(); showDashboard();
-    } catch (error) { captureError(error, { source: "action", component: "auth-form" }); showAlert($("#auth-alert"), error.message); }
-    finally { setLoading(form, false); }
+    } catch (error) {
+      captureError(error, { source: "action", component: "auth-form" });
+      const detail = String(error?.message || "");
+      if (/mfa code required/i.test(detail)) {
+        mfaRow.hidden = false;
+        mfaInput.required = true;
+        showAlert($("#auth-alert"), "Digite o código de seis dígitos do Google Authenticator para continuar.");
+        mfaInput.focus();
+      } else {
+        showAlert($("#auth-alert"), detail || "Não foi possível autenticar.");
+      }
+    } finally { setLoading(form, false); }
   });
 
   $("#signup-form").addEventListener("submit", async (event) => {
@@ -596,20 +657,15 @@
     try { await api("/v1/platform/auth/logout", { method: "POST", body: "{}" }); } finally { state.user = null; showAuth(); }
   });
 
-  document.querySelectorAll(".side-link").forEach((button) => button.addEventListener("click", async () => {
+  document.querySelectorAll(".side-link").forEach((button) => button.addEventListener("click", () => {
     document.querySelectorAll(".side-link").forEach((item) => item.classList.remove("active"));
     button.classList.add("active"); state.section = button.dataset.section; syncMobileNav(false);
-    if (state.selectedTenant) {
-      try {
-        if (state.section === "projects") await loadProjects();
-        if (state.section === "onboarding") await loadOnboarding();
-        if (state.section === "channels") await loadChannels();
-        if (state.section === "inbox") await loadInbox();
-        if (state.section === "conversations") await loadConversations();
-        if (state.section === "owner-whatsapp") await loadOwnerWhatsapp();
-      } catch (error) { captureError(error, { source: "navigation", component: state.section }); }
-    }
+    const requestedSection = state.section;
+    const loaders = { projects: loadProjects, keys: loadApiKeys, onboarding: loadOnboarding, channels: loadChannels, inbox: loadInbox, conversations: loadConversations, "owner-whatsapp": loadOwnerWhatsapp };
     renderDashboard();
+    const loader = loaders[requestedSection];
+    if (!state.selectedTenant || !loader) return;
+    void loader().then(() => { if (state.section === requestedSection) renderDashboard(); }).catch((error) => { captureError(error, { source: "navigation", component: requestedSection }); showAlert($("#dashboard-alert"), error.message); });
   }));
 
   void loadSession().catch((error) => { captureError(error, { source: "bootstrap", component: "platform-app" }); showAuth(); });

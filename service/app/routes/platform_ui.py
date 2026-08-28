@@ -52,6 +52,7 @@ def platform_ui(request: Request) -> HTMLResponse:
           <form id="login-form" class="form-stack">
             <label>Email<input name="email" type="email" autocomplete="email" placeholder="voce@empresa.com" required /></label>
             <label>Senha<input name="password" type="password" autocomplete="current-password" placeholder="Mínimo de 12 caracteres" required /></label>
+            <label id="login-mfa-row" hidden>Código do Google Authenticator <span class="optional">se solicitado</span><input id="login-mfa-code" name="mfa_code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="000000" /></label>
             <button class="button button-primary" type="submit">Entrar no control plane <span>↗</span></button>
           </form>
           <form id="signup-form" class="form-stack" hidden>
@@ -113,7 +114,7 @@ def platform_ui(request: Request) -> HTMLResponse:
     </section>
   </main>
   <script src="/assets/platform-diagnostics.js" defer></script>
-  <script src="/assets/platform-app.js?v=20260827-api-mago-bot" defer></script>
+  <script src="/assets/platform-app.js?v=20260828-channels-recovery-1" defer></script>
 </body>
 </html>"""
     return HTMLResponse(html, headers={"Cache-Control": "no-store"})
