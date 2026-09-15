@@ -22,7 +22,7 @@ def platform_ui(request: Request) -> HTMLResponse:
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="API Mago Bot — Produto de API multi-tenant para mensageria, automação e operação profissional." />
   <title>API Mago Bot | Produto de API</title>
-  <link rel="stylesheet" href="/assets/platform.css?v=20260827-api-mago-bot" />
+  <link rel="stylesheet" href="/assets/platform.css?v=20260915-spatial-ui-1" />
 </head>
 <body>
   <div class="noise" aria-hidden="true"></div>
@@ -114,7 +114,7 @@ def platform_ui(request: Request) -> HTMLResponse:
     </section>
   </main>
   <script src="/assets/platform-diagnostics.js" defer></script>
-  <script src="/assets/platform-app.js?v=20260828-channels-recovery-3" defer></script>
+  <script src="/assets/platform-app.js?v=20260915-spatial-ui-1" defer></script>
 </body>
 </html>"""
     return HTMLResponse(html, headers={"Cache-Control": "no-store"})
