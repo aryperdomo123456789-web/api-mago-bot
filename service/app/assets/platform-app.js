@@ -3,7 +3,9 @@
 
   const state = { user: null, tenants: [], projects: [], conversations: [], channels: [], channelProvider: {}, channelActions: {}, inbox: [], apiKeys: [], newlyIssuedKey: null, onboarding: null, ownerWhatsapp: null, selectedTenant: null, section: "overview", signup: false };
   const $ = (selector) => document.querySelector(selector);
-  const syncMobileNav = (open) => { const dashboard = $("#dashboard-view"); const toggle = $("#mobile-menu-toggle"); if (!dashboard) return; dashboard.classList.toggle("nav-open", open); document.body.classList.toggle("mobile-nav-open", open); toggle?.setAttribute("aria-expanded", String(open)); toggle?.setAttribute("aria-label", open ? "Fechar menu principal" : "Abrir menu principal"); };
+  const syncMobileNav = (open) => { const dashboard = $("#dashboard-view"); const toggle = $("#mobile-menu-toggle"); if (!dashboard) return; dashboard.classList.toggle("nav-open", open); document.body.classList.toggle("mobile-nav-open", open); toggle?.setAttribute("aria-expanded", String(open)); toggle?.setAttribute("aria-label", open ? "Fechar menu principal" : "Abrir menu principal"); toggle?.setAttribute("title", open ? "Fechar menu principal" : "Abrir menu principal"); };
+  const setSidebarCollapsed = (collapsed) => { const dashboard = $("#dashboard-view"); const toggle = $("#mobile-menu-toggle"); if (!dashboard) return; dashboard.classList.toggle("sidebar-collapsed", collapsed); window.localStorage?.setItem("mago-platform-sidebar-collapsed", String(collapsed)); toggle?.setAttribute("aria-expanded", String(!collapsed)); toggle?.setAttribute("aria-label", collapsed ? "Expandir menu principal" : "Recolher menu principal"); toggle?.setAttribute("title", collapsed ? "Expandir menu principal" : "Recolher menu principal"); };
+  const toggleSidebar = () => { const dashboard = $("#dashboard-view"); if (window.matchMedia("(max-width: 1080px)").matches) return syncMobileNav(!dashboard?.classList.contains("nav-open")); setSidebarCollapsed(!dashboard?.classList.contains("sidebar-collapsed")); };
   const diagnostics = window.MagoDiagnostics || { capture: () => null, safeRender: (_name, renderer) => renderer() };
 
   function captureError(error, context = {}) {
@@ -160,6 +162,7 @@
     $("#auth-view").hidden = true;
     $("#dashboard-view").hidden = false;
     syncMobileNav(false);
+    setSidebarCollapsed(window.localStorage?.getItem("mago-platform-sidebar-collapsed") === "true");
     $("#user-chip").textContent = `${state.user.full_name} · ${state.user.role}`;
     const ownerLink = document.querySelector('[data-section="owner-whatsapp"]');
     if (ownerLink) ownerLink.hidden = !["owner", "platform_superadmin", "platform_operator"].includes(state.user.role);
@@ -555,7 +558,7 @@
     diagnostics.safeRender(state.section, renderer, (retry) => renderFallback(label, retry), { state: { section: state.section, tenant: state.selectedTenant?.id } });
   }
 
-  $("#mobile-menu-toggle")?.addEventListener("click", () => syncMobileNav(!$("#dashboard-view")?.classList.contains("nav-open")));
+  $("#mobile-menu-toggle")?.addEventListener("click", toggleSidebar);
   $("#sidebar-close")?.addEventListener("click", () => syncMobileNav(false));
   $("#mobile-nav-backdrop")?.addEventListener("click", () => syncMobileNav(false));
   document.addEventListener("keydown", (event) => { if (event.key === "Escape") syncMobileNav(false); });

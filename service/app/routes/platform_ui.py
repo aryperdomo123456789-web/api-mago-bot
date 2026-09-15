@@ -23,7 +23,7 @@ def platform_ui(request: Request) -> HTMLResponse:
   <meta name="description" content="API Mago Bot — Produto de API multi-tenant para mensageria, automação e operação profissional." />
   <title>API Mago Bot | Produto de API</title>
   <script src="/assets/internal-theme.js?v=20260915-theme-1"></script>
-  <link rel="stylesheet" href="/assets/platform.css?v=20260915-theme-1" />
+  <link rel="stylesheet" href="/assets/platform.css?v=20260915-nav-1" />
 </head>
 <body class="platform-surface">
   <canvas id="mago-spatial-canvas" aria-hidden="true"></canvas>
@@ -107,7 +107,7 @@ def platform_ui(request: Request) -> HTMLResponse:
       </aside>
       <div class="dashboard-main">
         <header class="topbar">
-          <div class="topbar-title"><button id="mobile-menu-toggle" class="mobile-menu-toggle" type="button" aria-controls="main-sidebar" aria-expanded="false" aria-label="Abrir menu principal">☰</button><div><p class="eyebrow">API MAGO BOT / PRODUTO DE API</p><h2 id="dashboard-title">Visão geral</h2></div></div>
+          <div class="topbar-title"><button id="mobile-menu-toggle" class="mobile-menu-toggle" type="button" aria-controls="main-sidebar" aria-expanded="true" aria-label="Recolher menu principal" title="Recolher menu principal">☰</button><div><p class="eyebrow">API MAGO BOT / PRODUTO DE API</p><h2 id="dashboard-title">Visão geral</h2></div></div>
           <div class="topbar-actions"><span id="user-chip" class="user-chip"></span><button class="theme-toggle button button-ghost small" type="button" data-theme-toggle><span data-theme-icon aria-hidden="true">☾</span><span data-theme-label>Escuro</span></button><button id="logout-button" class="button button-ghost small">Sair</button></div>
         </header>
         <div id="dashboard-alert" class="alert" role="alert" hidden></div>
@@ -118,7 +118,7 @@ def platform_ui(request: Request) -> HTMLResponse:
   <script src="/assets/platform-diagnostics.js" defer></script>
   <script src="/assets/three.min.js?v=20260915-three-r128" defer></script>
   <script src="/assets/spatial-3d.js?v=20260915-spatial-ui-2" defer></script>
-  <script src="/assets/platform-app.js?v=20260915-spatial-ui-2" defer></script>
+  <script src="/assets/platform-app.js?v=20260915-nav-1" defer></script>
 </body>
 </html>"""
     return HTMLResponse(html, headers={"Cache-Control": "no-store"})

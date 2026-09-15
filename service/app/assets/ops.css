@@ -361,9 +361,27 @@ html, body { margin: 0; padding: 0; }
 :root[data-theme="light"] .empty { border-color: rgba(37, 63, 91, 0.2); background: rgba(255, 255, 255, 0.62); }
 :root[data-theme="light"] .theme-toggle { min-width: 96px; gap: 7px; }
 
+/* Header and navigation: rounded surface with a persistent collapse control. */
+.ops-topbar { min-height: 78px; margin-bottom: 24px; padding: 16px 18px; border: 1px solid var(--ops-line); border-radius: 22px; background: linear-gradient(145deg, rgba(12, 23, 39, 0.88), rgba(6, 11, 20, 0.94)); box-shadow: 0 18px 48px rgba(0, 0, 0, 0.16); }
+.ops-topbar::after { left: 18px; bottom: -1px; width: 180px; }
+.ops-menu-toggle { display: inline-flex; align-items: center; justify-content: center; width: 42px; min-width: 42px; height: 42px; margin-right: 11px; padding: 0; border: 1px solid var(--ops-line); border-radius: 12px; color: var(--ops-text); background: rgba(255, 255, 255, 0.045); font-size: 1.12rem; line-height: 1; transition: border-color 160ms var(--ops-ease), background 160ms var(--ops-ease), transform 160ms var(--ops-ease); }
+.ops-menu-toggle:hover { border-color: var(--ops-line-strong); background: rgba(103, 232, 249, 0.09); }
+.ops-menu-toggle:active { transform: scale(0.96); }
+.ops-topbar-actions { flex-wrap: wrap; }
+.ops-dashboard { transition: grid-template-columns 240ms var(--ops-ease); }
+.ops-dashboard.sidebar-collapsed { grid-template-columns: 0 minmax(0, 1fr); }
+.ops-dashboard.sidebar-collapsed .ops-sidebar { min-width: 0; width: 0; padding-right: 0; padding-left: 0; border-right-width: 0; opacity: 0; overflow: hidden; pointer-events: none; transform: translateX(-100%); transition: width 240ms var(--ops-ease), padding 240ms var(--ops-ease), opacity 160ms var(--ops-ease), transform 240ms var(--ops-ease); }
+:root[data-theme="light"] .ops-topbar { border-color: rgba(37, 63, 91, 0.16); background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(239, 245, 251, 0.96)); box-shadow: 0 16px 38px rgba(29, 50, 75, 0.1); }
+
+@media (max-width: 920px) {
+  .ops-dashboard.sidebar-collapsed { grid-template-columns: 1fr; }
+  .ops-dashboard.sidebar-collapsed .ops-sidebar { width: min(88vw, 340px); padding: 28px 18px 20px; border-right-width: 1px; opacity: 1; pointer-events: auto; transform: translateX(-104%); }
+}
+
 @media (max-width: 620px) {
   :root[data-theme="light"] .theme-toggle { min-width: 44px; padding: 0 11px; }
   :root[data-theme="light"] .theme-toggle [data-theme-label] { display: none; }
+  .ops-topbar { min-height: 64px; padding: 9px 11px 12px; border-radius: 17px; }
 }
 
 

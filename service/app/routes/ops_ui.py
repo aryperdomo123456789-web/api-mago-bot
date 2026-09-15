@@ -19,7 +19,7 @@ def operations_ui(request: Request) -> HTMLResponse:
   <meta name="description" content="API Mago Bot — Operations Console" />
   <title>API Mago Bot | Operations Console</title>
   <script src="/assets/internal-theme.js?v=20260915-theme-1"></script>
-  <link rel="stylesheet" href="/assets/ops.css?v=20260915-theme-1" />
+  <link rel="stylesheet" href="/assets/ops.css?v=20260915-nav-1" />
 </head>
 <body class="ops-surface">
   <canvas id="mago-spatial-canvas" aria-hidden="true"></canvas>
@@ -53,7 +53,7 @@ def operations_ui(request: Request) -> HTMLResponse:
         <div class="ops-sidebar-footer"><span class="status-dot"></span> Console protegido</div>
       </aside>
       <div class="ops-main">
-        <header class="ops-topbar"><div class="ops-topbar-title"><button id="ops-menu-toggle" class="ops-menu-toggle" type="button" aria-controls="ops-sidebar" aria-expanded="false" aria-label="Abrir menu operacional">☰</button><div><p class="eyebrow">API MAGO BOT / CONTROL PLANE</p><h2 id="ops-panel-title">Overview</h2></div></div><div class="ops-topbar-actions"><div class="ops-topbar-meta"><span class="ops-env-badge">PRODUÇÃO</span><span class="ops-security-badge"><span class="status-dot"></span> Owner control plane</span></div><button class="theme-toggle ops-button ghost" type="button" data-theme-toggle><span data-theme-icon aria-hidden="true">☾</span><span data-theme-label>Escuro</span></button><button id="ops-logout" class="ops-button ghost">Sair</button></div></header>
+        <header class="ops-topbar"><div class="ops-topbar-title"><button id="ops-menu-toggle" class="ops-menu-toggle" type="button" aria-controls="ops-sidebar" aria-expanded="true" aria-label="Recolher menu operacional" title="Recolher menu operacional">☰</button><div><p class="eyebrow">API MAGO BOT / CONTROL PLANE</p><h2 id="ops-panel-title">Overview</h2></div></div><div class="ops-topbar-actions"><div class="ops-topbar-meta"><span class="ops-env-badge">PRODUÇÃO</span><span class="ops-security-badge"><span class="status-dot"></span> Owner control plane</span></div><button class="theme-toggle ops-button ghost" type="button" data-theme-toggle><span data-theme-icon aria-hidden="true">☾</span><span data-theme-label>Escuro</span></button><button id="ops-logout" class="ops-button ghost">Sair</button></div></header>
         <div id="ops-alert" class="ops-alert" hidden></div>
         <div id="ops-content" class="ops-content"></div>
       </div>
@@ -61,7 +61,7 @@ def operations_ui(request: Request) -> HTMLResponse:
   </main>
     <script src="/assets/three.min.js?v=20260915-three-r128" defer></script>
     <script src="/assets/spatial-3d.js?v=20260915-spatial-ui-2" defer></script>
-    <script src="/assets/ops-app.js?v=20260915-spatial-ui-2" defer></script>
+    <script src="/assets/ops-app.js?v=20260915-nav-1" defer></script>
 </body>
 </html>"""
     return HTMLResponse(html, headers={"Cache-Control": "no-store"})
