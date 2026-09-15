@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session, selectinload
 from ..core.config import Settings
 from ..db import SessionLocal
 from ..models import CustomerAccount, LicenseKey, LicenseProject, PartnerApplication, PlanCatalog
+from ..owner_welcome import enqueue_owner_welcome
 from ..schemas import (
     CustomerAccountResponse,
     PartnerApplicationCreate,
@@ -165,7 +166,7 @@ def create_trial(payload: TrialCreateRequest, db: Session = Depends(get_db)):
         trial_ends_at=expires_at,
         expires_at=expires_at,
         notes=payload.notes,
-        extra_metadata={"source": "public_home", "plan": plan.slug},
+        extra_metadata={"source": "public_home", "plan": plan.slug, "whatsapp_opt_in": payload.whatsapp_opt_in, "whatsapp_opt_in_source": payload.whatsapp_opt_in_source},
     )
     db.add(account)
     db.flush()
@@ -198,6 +199,15 @@ def create_trial(payload: TrialCreateRequest, db: Session = Depends(get_db)):
 
     account.license_project_id = project.id
     account.license_id = license_row.id
+    enqueue_owner_welcome(
+        db,
+        source_type="public_trial",
+        source_id=str(account.id),
+        recipient_phone=account.phone,
+        recipient_name=account.full_name,
+        opt_in=bool(payload.whatsapp_opt_in),
+        opt_in_source=payload.whatsapp_opt_in_source,
+    )
     db.commit()
     db.refresh(account)
     db.refresh(license_row)

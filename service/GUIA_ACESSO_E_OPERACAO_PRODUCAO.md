@@ -1,15 +1,15 @@
-# Mago Bot — Guia de acesso e operação em produção
+# API Mago Bot — Guia de acesso e operação em produção
 
 Atualizado em 26/08/2026. Este documento não contém segredos. As chaves reais ficam somente no servidor, com permissão `600`.
 
 ## Endereços publicados
 
-- Produto e central de licenças: `https://app.mago-bot.com`
+- Produto/API e portal customer-scoped: `https://app.mago-bot.com`
 - Administração: `https://app.mago-bot.com/admin`
 - OpenAPI: `https://app.mago-bot.com/docs`
 - Referência da plataforma: `https://app.mago-bot.com/v1/reference`
-- Evolution API: `https://evo-api.mago-bot.com`
-- Gerenciador da Evolution: `https://evo-api.mago-bot.com/manager`
+- Operations Console e provider Evolution compatibilidade: `https://evo-api.mago-bot.com`
+- Manager bruto da Evolution: `https://evo-api.mago-bot.com/manager` — bloqueado externamente
 - Banco da plataforma: somente localhost em `127.0.0.1:33366`
 
 ## Onde estão as credenciais

@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from ..auth import clear_session_cookie, get_current_panel_user, hash_password, issue_session_token, set_session_cookie, verify_password
 from ..db import SessionLocal
 from ..models import OwnerProfile, PanelUser
+from ..platform_models import AuditEvent
 from ..schemas import (
     OwnerProfileResponse,
     OwnerProfileUpdate,
@@ -104,6 +105,17 @@ def update_account(payload: OwnerProfileUpdate, request: Request, db: Session = 
     user.full_name = payload.display_name
     if payload.email:
         user.email = payload.email.strip().lower()
+    db.add(AuditEvent(
+        actor_user_id=user.id,
+        action="legacy.account.update",
+        resource_type="owner_profile",
+        resource_id="1",
+        outcome="success",
+        request_id=getattr(request.state, "request_id", None),
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent", "")[:512],
+        metadata_json={},
+    ))
     db.commit()
     db.refresh(profile)
     return {"ok": True, "profile": _serialize_profile(profile)}
@@ -134,6 +146,18 @@ def create_user(payload: PanelUserCreate, request: Request, db: Session = Depend
         notes=payload.notes,
     )
     db.add(row)
+    db.flush()
+    db.add(AuditEvent(
+        actor_user_id=user.id,
+        action="legacy.user.create",
+        resource_type="panel_user",
+        resource_id=str(row.id),
+        outcome="success",
+        request_id=getattr(request.state, "request_id", None),
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent", "")[:512],
+        metadata_json={"role": row.role},
+    ))
     db.commit()
     db.refresh(row)
     return {"ok": True, "user": _serialize_user(row)}
@@ -160,6 +184,17 @@ def update_user(user_id: int, payload: PanelUserUpdate, request: Request, db: Se
         row.is_active = payload.is_active
     if payload.notes is not None:
         row.notes = payload.notes
+    db.add(AuditEvent(
+        actor_user_id=user.id,
+        action="legacy.user.update",
+        resource_type="panel_user",
+        resource_id=str(row.id),
+        outcome="success",
+        request_id=getattr(request.state, "request_id", None),
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent", "")[:512],
+        metadata_json={},
+    ))
     db.commit()
     db.refresh(row)
     return {"ok": True, "user": _serialize_user(row)}
@@ -174,6 +209,17 @@ def delete_user(user_id: int, request: Request, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="user not found")
     if row.role == "owner":
         raise HTTPException(status_code=400, detail="owner cannot be deleted")
+    db.add(AuditEvent(
+        actor_user_id=user.id,
+        action="legacy.user.delete",
+        resource_type="panel_user",
+        resource_id=str(row.id),
+        outcome="success",
+        request_id=getattr(request.state, "request_id", None),
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent", "")[:512],
+        metadata_json={},
+    ))
     db.delete(row)
     db.commit()
     return {"ok": True}

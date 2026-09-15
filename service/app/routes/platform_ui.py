@@ -1,0 +1,124 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+from fastapi import APIRouter, Request
+from fastapi.responses import HTMLResponse
+
+from ..surface_auth import require_customer_surface
+
+router = APIRouter(tags=["platform-ui"])
+ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets"
+
+
+@router.get("/platform", response_class=HTMLResponse)
+@router.get("/admin", response_class=HTMLResponse)
+def platform_ui(request: Request) -> HTMLResponse:
+    require_customer_surface(request)
+    html = """<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="API Mago Bot — Produto de API multi-tenant para mensageria, automação e operação profissional." />
+  <title>API Mago Bot | Produto de API</title>
+  <script src="/assets/internal-theme.js?v=20260915-theme-1"></script>
+  <link rel="stylesheet" href="/assets/platform.css?v=20260915-nav-1" />
+</head>
+<body class="platform-surface">
+  <canvas id="mago-spatial-canvas" aria-hidden="true"></canvas>
+  <div class="noise" aria-hidden="true"></div>
+  <main id="app-shell" class="app-shell">
+    <section id="auth-view" class="auth-layout" aria-labelledby="auth-title">
+      <div class="auth-story">
+        <div class="brand-lockup"><span class="brand-mark">M</span><span>API MAGO BOT</span></div>
+        <div class="story-copy">
+          <p class="eyebrow">API MAGO BOT / PRODUTO DE API</p>
+          <h1>Infraestrutura de conversa para quem cansou de depender de gambiarra.</h1>
+          <p class="story-text">Orquestre projetos, providers, chaves, quotas, webhooks e conversas num único cockpit. Meta Cloud oficial ou Evolution compatibilidade, sempre com transparência, isolamento e rastreabilidade.</p>
+        </div>
+        <div class="story-grid">
+          <div><strong>01</strong><span>API multi-tenant</span></div>
+          <div><strong>02</strong><span>Meta Cloud oficial</span></div>
+          <div><strong>03</strong><span>Tenant seguro</span></div>
+        </div>
+      </div>
+      <div class="auth-card-wrap">
+        <div class="auth-card">
+          <div class="auth-heading">
+            <p class="eyebrow">API MAGO BOT / ACESSO SEGURO</p>
+            <h2 id="auth-title">Entre na API Mago Bot.</h2>
+            <p id="auth-copy">Seu workspace, seus canais e sua operação em um único produto de API.</p>
+          </div>
+          <div id="auth-alert" class="alert" role="alert" hidden></div>
+          <form id="login-form" class="form-stack">
+            <label>Email<input name="email" type="email" autocomplete="email" placeholder="voce@empresa.com" required /></label>
+            <label>Senha<input name="password" type="password" autocomplete="current-password" placeholder="Mínimo de 12 caracteres" required /></label>
+            <label id="login-mfa-row" hidden>Código do Google Authenticator <span class="optional">se solicitado</span><input id="login-mfa-code" name="mfa_code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="000000" /></label>
+            <button class="button button-primary" type="submit">Entrar no control plane <span>↗</span></button>
+          </form>
+          <form id="signup-form" class="form-stack" hidden>
+            <label>Nome completo<input name="full_name" autocomplete="name" placeholder="Seu nome" required minlength="2" /></label>
+            <label>Empresa<input name="company_name" autocomplete="organization" placeholder="Nome da empresa" required minlength="2" /></label>
+            <label>WhatsApp <span class="optional">opcional</span><input name="phone" type="tel" autocomplete="tel" placeholder="+55 11 99999-9999" /></label>
+            <label class="check-row"><input name="whatsapp_opt_in" type="checkbox" value="true" /><span>Aceito receber uma mensagem de boas-vindas pelo WhatsApp</span></label>
+            <label>Email<input name="email" type="email" autocomplete="email" placeholder="voce@empresa.com" required /></label>
+            <label>Senha forte<input name="password" type="password" autocomplete="new-password" placeholder="Mínimo de 12 caracteres" required minlength="12" /></label>
+            <label>Slug da organização <span class="optional">opcional</span><input name="tenant_slug" placeholder="minha-empresa" pattern="[a-z0-9-]+" /></label>
+            <button class="button button-primary" type="submit">Criar ambiente <span>↗</span></button>
+          </form>
+          <form id="password-reset-form" class="form-stack" hidden>
+            <label>Email<input name="email" type="email" autocomplete="email" placeholder="voce@empresa.com" required /></label>
+            <button class="button button-primary" type="submit">Enviar link de redefinição <span>↗</span></button>
+          </form>
+          <form id="reset-confirm-form" class="form-stack" hidden>
+            <input id="reset-token" name="token" type="hidden" />
+            <label>Nova senha<input name="password" type="password" autocomplete="new-password" placeholder="Mínimo de 12 caracteres" required minlength="12" /></label>
+            <button class="button button-primary" type="submit">Salvar nova senha <span>↗</span></button>
+          </form>
+          <button id="toggle-auth" class="button button-ghost" type="button">Ainda não tenho acesso</button>
+          <button id="toggle-reset" class="button button-link" type="button">Esqueci minha senha</button>
+          <p class="legal-note">Tokens de provider nunca são exibidos no navegador. Para produção, use Meta Cloud API com credenciais server-side e webhook assinado.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="dashboard-view" class="dashboard-layout" hidden>
+      <button id="mobile-nav-backdrop" class="mobile-nav-backdrop" type="button" aria-label="Fechar menu principal"></button>
+      <aside id="main-sidebar" class="sidebar" aria-label="Navegação principal">
+        <div class="sidebar-head">
+          <div class="brand-lockup"><span class="brand-mark">M</span><span>API MAGO BOT</span></div>
+          <button id="sidebar-close" class="sidebar-close" type="button" aria-label="Fechar menu principal">×</button>
+        </div>
+        <div class="side-label">OPERAÇÃO</div>
+        <nav class="side-nav" aria-label="Navegação principal">
+          <button class="side-link active" data-section="overview">Visão geral</button>
+          <button class="side-link" data-section="onboarding">Primeiro valor</button>
+          <button class="side-link" data-section="projects">Projetos & providers</button>
+          <button class="side-link" data-section="channels">Canais</button>
+          <button class="side-link" data-section="inbox">Inbox</button>
+          <button class="side-link" data-section="conversations">Conversas</button>
+          <button class="side-link" data-section="keys">API keys</button>
+          <button class="side-link" data-section="webhooks">Webhooks</button>
+          <button class="side-link" data-section="usage">Uso & quotas</button>
+          <button class="side-link" data-section="owner-whatsapp" hidden>WhatsApp do dono</button>
+        </nav>
+        <div class="sidebar-footer"><span class="status-dot"></span><span>Control plane online</span></div>
+      </aside>
+      <div class="dashboard-main">
+        <header class="topbar">
+          <div class="topbar-title"><button id="mobile-menu-toggle" class="mobile-menu-toggle" type="button" aria-controls="main-sidebar" aria-expanded="true" aria-label="Recolher menu principal" title="Recolher menu principal">☰</button><div><p class="eyebrow">API MAGO BOT / PRODUTO DE API</p><h2 id="dashboard-title">Visão geral</h2></div></div>
+          <div class="topbar-actions"><span id="user-chip" class="user-chip"></span><button class="theme-toggle button button-ghost small" type="button" data-theme-toggle><span data-theme-icon aria-hidden="true">☾</span><span data-theme-label>Escuro</span></button><button id="logout-button" class="button button-ghost small">Sair</button></div>
+        </header>
+        <div id="dashboard-alert" class="alert" role="alert" hidden></div>
+        <div id="dashboard-content"></div>
+      </div>
+    </section>
+  </main>
+  <script src="/assets/platform-diagnostics.js" defer></script>
+  <script src="/assets/three.min.js?v=20260915-three-r128" defer></script>
+  <script src="/assets/spatial-3d.js?v=20260915-spatial-ui-2" defer></script>
+  <script src="/assets/platform-app.js?v=20260915-nav-1" defer></script>
+</body>
+</html>"""
+    return HTMLResponse(html, headers={"Cache-Control": "no-store"})
