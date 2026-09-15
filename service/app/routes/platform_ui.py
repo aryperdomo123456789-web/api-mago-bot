@@ -22,7 +22,8 @@ def platform_ui(request: Request) -> HTMLResponse:
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="API Mago Bot — Produto de API multi-tenant para mensageria, automação e operação profissional." />
   <title>API Mago Bot | Produto de API</title>
-  <link rel="stylesheet" href="/assets/platform.css?v=20260915-layout-audit-1" />
+  <script src="/assets/internal-theme.js?v=20260915-theme-1"></script>
+  <link rel="stylesheet" href="/assets/platform.css?v=20260915-theme-1" />
 </head>
 <body class="platform-surface">
   <canvas id="mago-spatial-canvas" aria-hidden="true"></canvas>
@@ -107,7 +108,7 @@ def platform_ui(request: Request) -> HTMLResponse:
       <div class="dashboard-main">
         <header class="topbar">
           <div class="topbar-title"><button id="mobile-menu-toggle" class="mobile-menu-toggle" type="button" aria-controls="main-sidebar" aria-expanded="false" aria-label="Abrir menu principal">☰</button><div><p class="eyebrow">API MAGO BOT / PRODUTO DE API</p><h2 id="dashboard-title">Visão geral</h2></div></div>
-          <div class="topbar-actions"><span id="user-chip" class="user-chip"></span><button id="logout-button" class="button button-ghost small">Sair</button></div>
+          <div class="topbar-actions"><span id="user-chip" class="user-chip"></span><button class="theme-toggle button button-ghost small" type="button" data-theme-toggle><span data-theme-icon aria-hidden="true">☾</span><span data-theme-label>Escuro</span></button><button id="logout-button" class="button button-ghost small">Sair</button></div>
         </header>
         <div id="dashboard-alert" class="alert" role="alert" hidden></div>
         <div id="dashboard-content"></div>

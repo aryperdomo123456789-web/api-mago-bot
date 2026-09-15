@@ -240,6 +240,59 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
 
+/* Internal theme system. Public marketing/auth surfaces do not load this control. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f4f7fb;
+  --bg-deep: #eaf0f7;
+  --panel: rgba(255, 255, 255, 0.92);
+  --panel-solid: #ffffff;
+  --panel-soft: rgba(235, 242, 250, 0.96);
+  --line: rgba(37, 63, 91, 0.16);
+  --line-strong: rgba(11, 111, 164, 0.42);
+  --text: #172338;
+  --muted: #52647b;
+  --faint: #71839a;
+  --blue: #086d9f;
+  --blue-strong: #315fc0;
+  --violet: #6745b8;
+  --green: #16724f;
+  --yellow: #94600b;
+  --red: #b4233d;
+  --shadow: 0 24px 70px rgba(29, 50, 75, 0.14);
+}
+:root[data-theme="light"] body {
+  color: var(--text);
+  background: radial-gradient(circle at 12% -8%, rgba(92, 190, 229, 0.24), transparent 30rem), radial-gradient(circle at 94% 2%, rgba(145, 119, 226, 0.18), transparent 28rem), linear-gradient(180deg, #f7faff 0%, #eef3f9 72%, #f6f8fb 100%);
+}
+:root[data-theme="light"] .sidebar { background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(240, 246, 252, 0.96)); box-shadow: 12px 0 42px rgba(29, 50, 75, 0.08); }
+:root[data-theme="light"] .topbar { background: linear-gradient(180deg, rgba(247, 250, 254, 0.98) 38%, rgba(247, 250, 254, 0.84) 78%, transparent); }
+:root[data-theme="light"] .brand-lockup, :root[data-theme="light"] .topbar h2, :root[data-theme="light"] .section-intro h3, :root[data-theme="light"] .panel-card h3, :root[data-theme="light"] .kpi-value, :root[data-theme="light"] .list-item strong, :root[data-theme="light"] .story-copy h1, :root[data-theme="light"] .auth-heading h2 { color: #172338; }
+:root[data-theme="light"] .side-label { color: #687a91; }
+:root[data-theme="light"] .side-link { color: #52647b; }
+:root[data-theme="light"] .side-link:hover, :root[data-theme="light"] .side-link.active { color: #172338; background: linear-gradient(100deg, rgba(8, 109, 159, 0.1), rgba(103, 69, 184, 0.08)); }
+:root[data-theme="light"] .sidebar-footer, :root[data-theme="light"] .user-chip { color: #52647b; }
+:root[data-theme="light"] .kpi, :root[data-theme="light"] .panel-card { border-color: rgba(37, 63, 91, 0.14); background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(240, 246, 252, 0.96)); box-shadow: 0 16px 38px rgba(29, 50, 75, 0.1); }
+:root[data-theme="light"] .code-card { background: linear-gradient(145deg, #e6f4fb, #f8fbff); }
+:root[data-theme="light"] .code-block, :root[data-theme="light"] .mago-diagnostics-detail pre { color: #17324b; border-color: rgba(37, 63, 91, 0.17); background: #edf3f8; }
+:root[data-theme="light"] .form-stack input { color: #172338; border-color: rgba(37, 63, 91, 0.2); background: rgba(255, 255, 255, 0.9); }
+:root[data-theme="light"] .form-stack input::placeholder { color: #8291a5; }
+:root[data-theme="light"] .button-ghost { color: #25415d; border-color: rgba(37, 63, 91, 0.2); background: rgba(255, 255, 255, 0.7); }
+:root[data-theme="light"] .button-ghost:hover { border-color: rgba(8, 109, 159, 0.42); background: rgba(8, 109, 159, 0.08); }
+:root[data-theme="light"] .list-item, :root[data-theme="light"] .conversation-row, :root[data-theme="light"] .timeline-item, :root[data-theme="light"] .channel-row, :root[data-theme="light"] .inbox-row { border-color: rgba(37, 63, 91, 0.14); color: #172338; background: rgba(255, 255, 255, 0.68); }
+:root[data-theme="light"] .conversation-row:hover, :root[data-theme="light"] .conversation-row:focus-visible { background: #fff; }
+:root[data-theme="light"] .timeline-content { color: #172338; }
+:root[data-theme="light"] .mago-diagnostics-drawer { color: #172338; background: rgba(248, 251, 254, 0.98); box-shadow: -24px 0 70px rgba(29, 50, 75, 0.2); }
+:root[data-theme="light"] .mago-diagnostics-header { background: rgba(248, 251, 254, 0.98); }
+:root[data-theme="light"] .mago-diagnostics-close, :root[data-theme="light"] .mago-diagnostics-item { color: #172338; border-color: rgba(37, 63, 91, 0.16); background: rgba(255, 255, 255, 0.82); }
+:root[data-theme="light"] .onboarding-step, :root[data-theme="light"] .scope-option { border-color: rgba(37, 63, 91, 0.14); background: rgba(255, 255, 255, 0.62); }
+:root[data-theme="light"] .theme-toggle { min-width: 96px; gap: 7px; }
+
+@media (max-width: 560px) {
+  :root[data-theme="light"] .theme-toggle { min-width: 44px; padding: 0 11px; }
+  :root[data-theme="light"] .theme-toggle [data-theme-label] { display: none; }
+}
+
 /* Layout normalization: authenticated surfaces must start at the viewport edge. */
 html, body, #app-shell { margin: 0; padding: 0; }
 #auth-view[hidden], #dashboard-view[hidden] { display: none !important; }

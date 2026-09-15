@@ -321,6 +321,51 @@ html, body { margin: 0; padding: 0; }
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
 
+/* Internal theme system. Public surfaces do not load this stylesheet. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --ops-bg: #f4f7fb;
+  --ops-bg-deep: #eaf0f7;
+  --ops-sidebar: rgba(255, 255, 255, 0.96);
+  --ops-panel: rgba(255, 255, 255, 0.94);
+  --ops-panel-strong: #e6eef7;
+  --ops-panel-soft: rgba(235, 242, 250, 0.96);
+  --ops-line: rgba(37, 63, 91, 0.16);
+  --ops-line-strong: rgba(8, 109, 159, 0.42);
+  --ops-text: #172338;
+  --ops-muted: #52647b;
+  --ops-faint: #71839a;
+  --ops-cyan: #086d9f;
+  --ops-violet: #6745b8;
+  --ops-green: #16724f;
+  --ops-red: #b4233d;
+  --ops-amber: #94600b;
+  --ops-shadow: 0 22px 64px rgba(29, 50, 75, 0.12);
+}
+:root[data-theme="light"] body { color: var(--ops-text); background: radial-gradient(circle at 12% -8%, rgba(92, 190, 229, 0.24), transparent 30rem), radial-gradient(circle at 94% 2%, rgba(145, 119, 226, 0.18), transparent 28rem), linear-gradient(180deg, #f7faff 0%, #eef3f9 72%, #f6f8fb 100%); }
+:root[data-theme="light"] .ops-sidebar { background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(240, 246, 252, 0.97)); box-shadow: 12px 0 42px rgba(29, 50, 75, 0.08); }
+:root[data-theme="light"] .ops-topbar { background: linear-gradient(180deg, rgba(247, 250, 254, 0.98) 40%, rgba(247, 250, 254, 0.84) 78%, transparent); }
+:root[data-theme="light"] .ops-brand, :root[data-theme="light"] .ops-topbar h2, :root[data-theme="light"] .ops-panel h3, :root[data-theme="light"] .ops-card h3, :root[data-theme="light"] .ops-value { color: #172338; }
+:root[data-theme="light"] .ops-nav-label { color: #687a91; }
+:root[data-theme="light"] .ops-nav { color: #52647b; }
+:root[data-theme="light"] .ops-nav:hover, :root[data-theme="light"] .ops-nav.active { color: #172338; background: linear-gradient(100deg, rgba(8, 109, 159, 0.1), rgba(103, 69, 184, 0.08)); box-shadow: inset 3px 0 0 var(--ops-cyan), 0 8px 24px rgba(29, 50, 75, 0.08); }
+:root[data-theme="light"] .ops-card, :root[data-theme="light"] .ops-panel { border-color: rgba(37, 63, 91, 0.14); background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(240, 246, 252, 0.96)); box-shadow: 0 16px 38px rgba(29, 50, 75, 0.1); }
+:root[data-theme="light"] .ops-form, :root[data-theme="light"] .mfa-enrollment { background: rgba(255, 255, 255, 0.72); }
+:root[data-theme="light"] .ops-form input, :root[data-theme="light"] .ops-form-grid input, :root[data-theme="light"] .ops-form-grid select, :root[data-theme="light"] .ops-panel input, :root[data-theme="light"] .ops-panel textarea, :root[data-theme="light"] .ops-panel select { color: #172338; border-color: rgba(37, 63, 91, 0.2); background: rgba(255, 255, 255, 0.9); }
+:root[data-theme="light"] .ops-form input::placeholder, :root[data-theme="light"] .ops-panel input::placeholder, :root[data-theme="light"] .ops-panel textarea::placeholder { color: #8291a5; }
+:root[data-theme="light"] .ops-button.ghost { color: #25415d; border-color: rgba(37, 63, 91, 0.2); background: rgba(255, 255, 255, 0.7); }
+:root[data-theme="light"] .ops-button.ghost:hover { border-color: rgba(8, 109, 159, 0.42); background: rgba(8, 109, 159, 0.08); }
+:root[data-theme="light"] .ops-table-wrap { border-color: rgba(37, 63, 91, 0.16); background: rgba(255, 255, 255, 0.6); }
+:root[data-theme="light"] .ops-table td { color: #253b54; }
+:root[data-theme="light"] .ops-code { color: #17324b; border-color: rgba(37, 63, 91, 0.17); background: #edf3f8; }
+:root[data-theme="light"] .empty { border-color: rgba(37, 63, 91, 0.2); background: rgba(255, 255, 255, 0.62); }
+:root[data-theme="light"] .theme-toggle { min-width: 96px; gap: 7px; }
+
+@media (max-width: 620px) {
+  :root[data-theme="light"] .theme-toggle { min-width: 44px; padding: 0 11px; }
+  :root[data-theme="light"] .theme-toggle [data-theme-label] { display: none; }
+}
+
 
 /* Product polish: visual system shared with the customer portal. */
 .ops-sidebar {
