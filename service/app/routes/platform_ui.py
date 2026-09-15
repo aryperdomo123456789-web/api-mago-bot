@@ -115,7 +115,7 @@ def platform_ui(request: Request) -> HTMLResponse:
     </section>
   </main>
   <script src="/assets/platform-diagnostics.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+  <script src="/assets/three.min.js?v=20260915-three-r128" defer></script>
   <script src="/assets/spatial-3d.js?v=20260915-spatial-ui-2" defer></script>
   <script src="/assets/platform-app.js?v=20260915-spatial-ui-2" defer></script>
 </body>

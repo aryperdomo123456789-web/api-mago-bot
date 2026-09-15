@@ -58,7 +58,7 @@ def operations_ui(request: Request) -> HTMLResponse:
       </div>
     </section>
   </main>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+    <script src="/assets/three.min.js?v=20260915-three-r128" defer></script>
     <script src="/assets/spatial-3d.js?v=20260915-spatial-ui-2" defer></script>
     <script src="/assets/ops-app.js?v=20260915-spatial-ui-2" defer></script>
 </body>
