@@ -242,7 +242,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 
 /* Internal product polish: same spatial language as the host surface, tuned for work. */
 .dashboard-layout,
-.auth-layout { position: relative; isolation: isolate; }
+.auth-layout { position: relative; z-index: 1; isolation: isolate; }
+#mago-spatial-canvas { position: fixed; inset: 0; z-index: 0; width: 100vw; height: 100vh; pointer-events: none; opacity: .9; }
 .dashboard-layout::before,
 .auth-layout::before {
   content: "";

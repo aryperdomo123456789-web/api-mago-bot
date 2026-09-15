@@ -24,7 +24,8 @@ def platform_ui(request: Request) -> HTMLResponse:
   <title>API Mago Bot | Produto de API</title>
   <link rel="stylesheet" href="/assets/platform.css?v=20260915-spatial-ui-1" />
 </head>
-<body>
+<body class="platform-surface">
+  <canvas id="mago-spatial-canvas" aria-hidden="true"></canvas>
   <div class="noise" aria-hidden="true"></div>
   <main id="app-shell" class="app-shell">
     <section id="auth-view" class="auth-layout" aria-labelledby="auth-title">
@@ -114,7 +115,9 @@ def platform_ui(request: Request) -> HTMLResponse:
     </section>
   </main>
   <script src="/assets/platform-diagnostics.js" defer></script>
-  <script src="/assets/platform-app.js?v=20260915-spatial-ui-1" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+  <script src="/assets/spatial-3d.js?v=20260915-spatial-ui-2" defer></script>
+  <script src="/assets/platform-app.js?v=20260915-spatial-ui-2" defer></script>
 </body>
 </html>"""
     return HTMLResponse(html, headers={"Cache-Control": "no-store"})

@@ -20,7 +20,8 @@ def operations_ui(request: Request) -> HTMLResponse:
   <title>API Mago Bot | Operations Console</title>
       <link rel="stylesheet" href="/assets/ops.css?v=20260915-spatial-ui-1" />
 </head>
-<body>
+<body class="ops-surface">
+  <canvas id="mago-spatial-canvas" aria-hidden="true"></canvas>
   <main class="ops-shell">
     <section id="ops-auth" class="ops-auth" aria-labelledby="ops-title">
       <div class="ops-brand"><span class="ops-mark">M</span><span>API MAGO BOT / OPS</span></div>
@@ -57,7 +58,9 @@ def operations_ui(request: Request) -> HTMLResponse:
       </div>
     </section>
   </main>
-    <script src="/assets/ops-app.js?v=20260915-spatial-ui-1" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+    <script src="/assets/spatial-3d.js?v=20260915-spatial-ui-2" defer></script>
+    <script src="/assets/ops-app.js?v=20260915-spatial-ui-2" defer></script>
 </body>
 </html>"""
     return HTMLResponse(html, headers={"Cache-Control": "no-store"})

@@ -261,7 +261,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 
 /* Internal product polish: spatial control-plane treatment inspired by host.mago-bot.com. */
 .ops-dashboard,
-.ops-auth { position: relative; isolation: isolate; }
+.ops-auth { position: relative; z-index: 1; isolation: isolate; }
+#mago-spatial-canvas { position: fixed; inset: 0; z-index: 0; width: 100vw; height: 100vh; pointer-events: none; opacity: .9; }
 .ops-dashboard::before,
 .ops-auth::before {
   content: "";
