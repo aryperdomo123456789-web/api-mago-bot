@@ -167,7 +167,8 @@ class EvolutionManagementAdapter:
         else:
             response = await self._request("GET", f"/instance/connectionState/{self._path_value(instance_name)}")
         data = self._data(response)
-        raw_status = data.get("state") or data.get("status") or data.get("connectionStatus")
+        instance_data = data.get("instance") if isinstance(data.get("instance"), dict) else {}
+        raw_status = data.get("state") or data.get("status") or data.get("connectionStatus") or instance_data.get("state") or instance_data.get("status") or instance_data.get("connectionStatus")
         if raw_status is None and "connected" in data:
             raw_status = "connected" if data.get("connected") else "disconnected"
         status_value = str(raw_status or "unknown").lower()
@@ -180,8 +181,8 @@ class EvolutionManagementAdapter:
         return {
             "status": normalized,
             "provider_status": raw_status,
-            "jid": data.get("jid") or data.get("JID"),
-            "phone": data.get("phone") or data.get("phoneNumber"),
+            "jid": data.get("jid") or data.get("JID") or instance_data.get("jid") or instance_data.get("JID"),
+            "phone": data.get("phone") or data.get("phoneNumber") or instance_data.get("phone") or instance_data.get("phoneNumber"),
             "checked": True,
             "provider": self._safe_provider_payload(response),
         }
