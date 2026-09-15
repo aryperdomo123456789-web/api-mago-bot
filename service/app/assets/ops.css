@@ -259,6 +259,12 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   .ops-topbar h2 { font-size: 1.45rem; }
 }
 
+/* Layout normalization: authenticated surfaces must start at the viewport edge. */
+html, body { margin: 0; padding: 0; }
+#ops-auth[hidden], #ops-dashboard[hidden] { display: none !important; }
+#ops-dashboard:not([hidden]) { margin: 0; padding: 0; }
+#ops-dashboard:not([hidden]) .ops-main { padding-top: 24px; }
+
 /* Internal product polish: spatial control-plane treatment inspired by host.mago-bot.com. */
 .ops-dashboard,
 .ops-auth { position: relative; z-index: 1; isolation: isolate; }

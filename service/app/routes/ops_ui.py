@@ -18,7 +18,7 @@ def operations_ui(request: Request) -> HTMLResponse:
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="API Mago Bot — Operations Console" />
   <title>API Mago Bot | Operations Console</title>
-      <link rel="stylesheet" href="/assets/ops.css?v=20260915-spatial-ui-1" />
+  <link rel="stylesheet" href="/assets/ops.css?v=20260915-layout-audit-1" />
 </head>
 <body class="ops-surface">
   <canvas id="mago-spatial-canvas" aria-hidden="true"></canvas>

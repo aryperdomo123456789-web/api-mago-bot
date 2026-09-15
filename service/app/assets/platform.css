@@ -240,6 +240,12 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
 
+/* Layout normalization: authenticated surfaces must start at the viewport edge. */
+html, body, #app-shell { margin: 0; padding: 0; }
+#auth-view[hidden], #dashboard-view[hidden] { display: none !important; }
+#dashboard-view:not([hidden]) { margin: 0; padding: 0; }
+#dashboard-view:not([hidden]) .dashboard-main { padding-top: 24px; }
+
 /* Internal product polish: same spatial language as the host surface, tuned for work. */
 .dashboard-layout,
 .auth-layout { position: relative; z-index: 1; isolation: isolate; }

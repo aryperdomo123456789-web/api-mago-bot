@@ -22,7 +22,7 @@ def platform_ui(request: Request) -> HTMLResponse:
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="API Mago Bot — Produto de API multi-tenant para mensageria, automação e operação profissional." />
   <title>API Mago Bot | Produto de API</title>
-  <link rel="stylesheet" href="/assets/platform.css?v=20260915-spatial-ui-1" />
+  <link rel="stylesheet" href="/assets/platform.css?v=20260915-layout-audit-1" />
 </head>
 <body class="platform-surface">
   <canvas id="mago-spatial-canvas" aria-hidden="true"></canvas>
