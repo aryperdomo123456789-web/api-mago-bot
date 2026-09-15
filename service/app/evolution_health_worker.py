@@ -8,6 +8,7 @@ from pathlib import Path
 from sqlalchemy import select
 
 from .db import SessionLocal
+from .models import PanelUser  # noqa: F401  # register panel_users before EvolutionInstance mapper setup
 from .platform_crypto import decrypt_secret
 from .platform_models import EvolutionInstance, ProviderResource
 from .providers.base import ProviderError
