@@ -45,6 +45,8 @@ async def poll_once() -> bool:
                 row.status = result.get("status") or "degraded"
                 row.jid = result.get("jid") or row.jid
                 row.display_phone_number = result.get("phone") or row.display_phone_number
+                row.last_error_code = None
+                row.last_error_message = None
                 row.last_status_check_at = _now()
                 if row.status == "connected":
                     row.last_connected_at = row.last_connected_at or _now()
